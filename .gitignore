@@ -1,0 +1,11 @@
+# Ignorar o ambiente virtual
+.venv/
+venv/
+
+# Ignorar arquivos temporários do Python
+__pycache__/
+*.pyc
+
+# Ignorar o banco de dados local (Opcional, mas recomendado para privacidade)
+banco_faces/
+encodings.pickle
