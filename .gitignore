@@ -9,3 +9,8 @@ __pycache__/
 # Ignorar o banco de dados local (Opcional, mas recomendado para privacidade)
 banco_faces/
 encodings.pickle
+
+# MQTT logs
+backend_nuvem/mqtt_broker/log/
+backend_nuvem/mqtt_broker/data/
+
