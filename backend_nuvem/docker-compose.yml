@@ -9,3 +9,30 @@ services:
       - ./mqtt_broker/data:/mosquitto/data
       - ./mqtt_broker/log:/mosquitto/log
     restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: protego_postgres
+    environment:
+      POSTGRES_DB: protego_db
+      POSTGRES_USER: protego_user
+      POSTGRES_PASSWORD: protego_pass 
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  fastapi:
+    build: .
+    container_name: protego_fastapi
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://protego_user:protego_pass@postgres:5432/protego_db
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
