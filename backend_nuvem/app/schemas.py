@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -19,6 +20,16 @@ class PessoaBase(BaseModel):
 
 class PessoaResponse(PessoaBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+
+class MqttEventoResponse(BaseModel):
+    id: int
+    topic: str
+    payload: str
+    recebido_em: datetime
 
     class Config:
         from_attributes = True

@@ -1,23 +1,13 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
-from app.models import Pessoa
-from app.schemas import PessoaResponse
-from app.mqtt_listener import iniciar_mqtt_em_thread
+from app.models import Pessoa, MqttEvento
+from app.schemas import PessoaResponse, MqttEventoResponse
 
 Base.metadata.create_all(bind=engine)
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    iniciar_mqtt_em_thread()
-    yield
-
-
-app = FastAPI(title="Protego IA API", lifespan=lifespan)
+app = FastAPI(title="Protego IA API")
 
 
 @app.get("/health")
@@ -36,3 +26,8 @@ def buscar_pessoa(pessoa_id: int, db: Session = Depends(get_db)):
     if not pessoa:
         raise HTTPException(status_code=404, detail="Pessoa não encontrada")
     return pessoa
+
+
+@app.get("/mqtt-eventos", response_model=list[MqttEventoResponse])
+def listar_eventos(db: Session = Depends(get_db)):
+    return db.query(MqttEvento).order_by(MqttEvento.id.desc()).all()

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, Text, DateTime, func
 from app.database import Base
 
 
@@ -19,3 +19,12 @@ class Pessoa(Base):
     confianca = Column(Float, nullable=False)
     prova_de_vida = Column(Boolean, nullable=False)
     tem_mandado = Column(Boolean, nullable=False)
+
+
+class MqttEvento(Base):
+    __tablename__ = "mqtt_eventos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topic = Column(String, nullable=False)
+    payload = Column(Text, nullable=False)
+    recebido_em = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
