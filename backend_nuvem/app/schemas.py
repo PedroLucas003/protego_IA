@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -33,3 +35,8 @@ class MqttEventoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class MqttIngestRequest(BaseModel):
+    topic: str
+    payload: Any

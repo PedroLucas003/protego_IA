@@ -1,9 +1,11 @@
+import json
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
 from app.models import Pessoa, MqttEvento
-from app.schemas import PessoaResponse, MqttEventoResponse
+from app.schemas import PessoaResponse, MqttEventoResponse, MqttIngestRequest
 
 Base.metadata.create_all(bind=engine)
 
@@ -31,3 +33,26 @@ def buscar_pessoa(pessoa_id: int, db: Session = Depends(get_db)):
 @app.get("/mqtt-eventos", response_model=list[MqttEventoResponse])
 def listar_eventos(db: Session = Depends(get_db)):
     return db.query(MqttEvento).order_by(MqttEvento.id.desc()).all()
+
+
+@app.post("/mqtt-ingest")
+def mqtt_ingest(data: MqttIngestRequest, db: Session = Depends(get_db)):
+    try:
+        evento = MqttEvento(
+            topic=data.topic,
+            payload=json.dumps(data.payload, ensure_ascii=False)
+        )
+
+        db.add(evento)
+        db.commit()
+        db.refresh(evento)
+
+        return {
+            "status": "ok",
+            "message": "Evento MQTT recebido com sucesso",
+            "id": evento.id
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar evento: {str(e)}")

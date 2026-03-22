@@ -16,7 +16,7 @@ services:
     environment:
       POSTGRES_DB: protego_db
       POSTGRES_USER: protego_user
-      POSTGRES_PASSWORD: protego_pass 
+      POSTGRES_PASSWORD: protego_pass
     ports:
       - "5432:5432"
     volumes:
@@ -32,6 +32,21 @@ services:
       DATABASE_URL: postgresql://protego_user:protego_pass@postgres:5432/protego_db
     ports:
       - "8000:8000"
+    restart: unless-stopped
+
+  emqx:
+    image: emqx/emqx:latest
+    container_name: protego_emqx
+    depends_on:
+      - postgres
+    environment:
+      EMQX_NAME: protego_emqx
+      EMQX_HOST: 127.0.0.1
+      EMQX_DASHBOARD__DEFAULT_USERNAME: admin
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: public
+    ports:
+      - "1884:1883"
+      - "18083:18083"
     restart: unless-stopped
 
 volumes:
