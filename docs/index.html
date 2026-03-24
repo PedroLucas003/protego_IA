@@ -838,11 +838,13 @@ footer {
   <div class="navbar-brand">PROTEGO IA</div>
   <ul class="navbar-links">
     <li><a href="#arquitetura">ARQUITETURA</a></li>
+    <li><a href="#hardware">HARDWARE</a></li>
     <li><a href="#tecnologias">STACK</a></li>
     <li><a href="#modulos">BACKEND</a></li>
     <li><a href="#operacao">OPERAÇÃO</a></li>
-    <li><a href="#status">STATUS</a></li>
     <li><a href="#mqtt">MQTT</a></li>
+    <li><a href="#aplicativo">APP</a></li>
+    <li><a href="#demonstracao">DEMO</a></li>
     <li><a href="#executar">EXECUTAR</a></li>
     <li><a href="#codigo">CÓDIGO</a></li>
   </ul>
@@ -975,10 +977,61 @@ footer {
 
 <div class="divider"></div>
 
+<!-- ═══ HARDWARE IOT ═══ -->
+<section id="hardware">
+  <div class="reveal">
+    <div class="section-label">// 02 — HARDWARE IOT</div>
+    <h2 class="section-title">Dispositivo ESP32-CAM</h2>
+  </div>
+
+  <div class="reveal" style="margin-bottom:40px;">
+    <p style="font-size:15px;color:var(--cinza);line-height:1.8;max-width:700px;">
+      O hardware de captura do sistema Protego IA. Especificações técnicas, fotos do dispositivo
+      e detalhes do firmware serão adicionados aqui.
+    </p>
+  </div>
+
+  <!-- Placeholder imagem do hardware -->
+  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+    <div style="background:var(--bg2);border:1px dashed rgba(0,255,136,0.2);min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+      <div style="font-size:48px;opacity:0.3;">📷</div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.5);letter-spacing:2px;">FOTO DO HARDWARE · EM BREVE</div>
+    </div>
+    <div style="background:var(--bg2);border:1px dashed rgba(0,170,255,0.2);min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+      <div style="font-size:48px;opacity:0.3;">🔌</div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.5);letter-spacing:2px;">DIAGRAMA DE CONEXÕES · EM BREVE</div>
+    </div>
+  </div>
+
+  <!-- Specs placeholder -->
+  <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+    <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.06);padding:20px;">
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:var(--verde);letter-spacing:2px;margin-bottom:8px;">MICROCONTROLADOR</div>
+      <div style="font-size:13px;color:var(--branco);">ESP32 Dual-Core</div>
+      <div style="font-size:11px;color:var(--cinza);margin-top:4px;">Wi-Fi 802.11 b/g/n integrado</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.06);padding:20px;">
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:var(--azul);letter-spacing:2px;margin-bottom:8px;">CÂMERA</div>
+      <div style="font-size:13px;color:var(--branco);">OV2640</div>
+      <div style="font-size:11px;color:var(--cinza);margin-top:4px;">Até 2MP · streaming MJPEG</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.06);padding:20px;">
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:var(--amarelo);letter-spacing:2px;margin-bottom:8px;">STREAMING</div>
+      <div style="font-size:13px;color:var(--branco);">HTTP :81/stream</div>
+      <div style="font-size:11px;color:var(--cinza);margin-top:4px;">Consumido pela IA Python</div>
+    </div>
+    <div style="background:var(--bg2);border:1px dashed rgba(255,255,255,0.08);padding:20px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.4);letter-spacing:2px;text-align:center;">MAIS SPECS<br>EM BREVE</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
 <!-- ═══ TECNOLOGIAS ═══ -->
 <section id="tecnologias">
   <div class="reveal">
-    <div class="section-label">// 02 — STACK</div>
+    <div class="section-label">// 03 — STACK</div>
     <h2 class="section-title">Tecnologias Utilizadas</h2>
   </div>
 
@@ -1451,10 +1504,105 @@ footer {
   </div>
 </section>
 
+<div class="divider"></div>
+
+<!-- ═══ APLICATIVO ═══ -->
+<section id="aplicativo">
+  <div class="reveal">
+    <div class="section-label">// 08 — APLICATIVO</div>
+    <h2 class="section-title">App Flutter — Cliente Mobile</h2>
+  </div>
+
+  <div class="reveal" style="margin-bottom:40px;">
+    <p style="font-size:15px;color:var(--cinza);line-height:1.8;max-width:700px;">
+      Aplicativo mobile desenvolvido em Flutter que consome a API REST e recebe alertas
+      em tempo real via WebSocket. Screenshots e detalhes das telas serão adicionados aqui.
+    </p>
+  </div>
+
+  <!-- Placeholders de telas -->
+  <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px;">
+    <div style="background:var(--bg2);border:1px dashed rgba(0,255,136,0.2);min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;">
+      <div style="font-size:36px;opacity:0.3;">📱</div>
+      <div style="font-family:var(--fonte-mono);font-size:9px;color:rgba(136,153,170,0.5);letter-spacing:2px;text-align:center;">TELA DE ALERTA<br>EM BREVE</div>
+    </div>
+    <div style="background:var(--bg2);border:1px dashed rgba(0,170,255,0.2);min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;">
+      <div style="font-size:36px;opacity:0.3;">🔍</div>
+      <div style="font-family:var(--fonte-mono);font-size:9px;color:rgba(136,153,170,0.5);letter-spacing:2px;text-align:center;">CONSULTA DE<br>SUSPEITOS · EM BREVE</div>
+    </div>
+    <div style="background:var(--bg2);border:1px dashed rgba(255,204,0,0.2);min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;">
+      <div style="font-size:36px;opacity:0.3;">📋</div>
+      <div style="font-family:var(--fonte-mono);font-size:9px;color:rgba(136,153,170,0.5);letter-spacing:2px;text-align:center;">HISTÓRICO DE<br>EVENTOS · EM BREVE</div>
+    </div>
+    <div style="background:var(--bg2);border:1px dashed rgba(255,51,68,0.2);min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;">
+      <div style="font-size:36px;opacity:0.3;">📊</div>
+      <div style="font-family:var(--fonte-mono);font-size:9px;color:rgba(136,153,170,0.5);letter-spacing:2px;text-align:center;">DASHBOARD<br>EM BREVE</div>
+    </div>
+  </div>
+
+  <!-- Features do app -->
+  <div class="reveal" style="background:var(--bg2);border:1px solid rgba(0,255,136,0.1);padding:28px;">
+    <div style="font-family:var(--fonte-mono);font-size:11px;color:var(--verde);letter-spacing:2px;margin-bottom:20px;">FUNCIONALIDADES PREVISTAS</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+      <div style="font-size:13px;color:var(--cinza);">⟢ &nbsp;Alertas instantâneos de reconhecimento</div>
+      <div style="font-size:13px;color:var(--cinza);">⟢ &nbsp;Ficha completa do alvo identificado</div>
+      <div style="font-size:13px;color:var(--cinza);">⟢ &nbsp;Histórico de abordagens com timestamp</div>
+      <div style="font-size:13px;color:var(--cinza);">⟢ &nbsp;Controle remoto da câmera ESP32</div>
+      <div style="font-size:13px;color:var(--cinza);opacity:0.4;">⬡ &nbsp;[A completar]</div>
+      <div style="font-size:13px;color:var(--cinza);opacity:0.4;">⬡ &nbsp;[A completar]</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ DEMONSTRAÇÃO ═══ -->
+<section id="demonstracao">
+  <div class="reveal">
+    <div class="section-label">// 09 — DEMONSTRAÇÃO</div>
+    <h2 class="section-title">Demonstração do Sistema</h2>
+  </div>
+
+  <div class="reveal" style="margin-bottom:40px;">
+    <p style="font-size:15px;color:var(--cinza);line-height:1.8;max-width:700px;">
+      Evidências visuais do projeto em funcionamento — fotos do hardware, prints do reconhecimento
+      facial, gráficos de desempenho e vídeo demonstrativo serão adicionados aqui.
+    </p>
+  </div>
+
+  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+    <!-- Foto hardware -->
+    <div style="background:var(--bg2);border:1px dashed rgba(0,255,136,0.2);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+      <div style="font-size:40px;opacity:0.3;">🖼️</div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.5);letter-spacing:2px;">FOTO DO HARDWARE · EM BREVE</div>
+    </div>
+    <!-- Print reconhecimento -->
+    <div style="background:var(--bg2);border:1px dashed rgba(0,170,255,0.2);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+      <div style="font-size:40px;opacity:0.3;">🎯</div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.5);letter-spacing:2px;">PRINT DO RECONHECIMENTO · EM BREVE</div>
+    </div>
+  </div>
+
+  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <!-- Diagrama arquitetura -->
+    <div style="background:var(--bg2);border:1px dashed rgba(255,204,0,0.2);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+      <div style="font-size:40px;opacity:0.3;">📐</div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.5);letter-spacing:2px;">DIAGRAMA (DRAW.IO) · EM BREVE</div>
+    </div>
+    <!-- Vídeo demo -->
+    <div style="background:var(--bg2);border:1px dashed rgba(255,51,68,0.2);min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+      <div style="font-size:40px;opacity:0.3;">▶️</div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:rgba(136,153,170,0.5);letter-spacing:2px;">VÍDEO DEMONSTRATIVO · EM BREVE</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
 <!-- ═══ COMO EXECUTAR ═══ -->
 <section id="executar">
   <div class="reveal">
-    <div class="section-label">// 08 — EXECUÇÃO</div>
+    <div class="section-label">// 10 — EXECUÇÃO</div>
     <h2 class="section-title">Como Executar o Projeto</h2>
   </div>
 
@@ -1518,7 +1666,7 @@ footer {
 <!-- ═══ CÓDIGO FONTE ═══ -->
 <section id="codigo">
   <div class="reveal">
-    <div class="section-label">// 09 — REPOSITÓRIO</div>
+    <div class="section-label">// 11 — REPOSITÓRIO</div>
     <h2 class="section-title">Código Fonte</h2>
   </div>
   <div class="reveal" style="margin-bottom:32px;">
