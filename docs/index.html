@@ -1,46 +1,1618 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Protego IA - Documentação</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protego IA — Sistema de Reconhecimento Facial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde:   #00ff88;
+  --azul:    #0af;
+  --vermelho:#ff3344;
+  --amarelo: #ffcc00;
+  --bg:      #060a0f;
+  --bg2:     #0c1420;
+  --bg3:     #111c2a;
+  --cinza:   #8899aa;
+  --branco:  #e8f0f8;
+  --fonte-mono: 'Share Tech Mono', monospace;
+  --fonte:      'Barlow', sans-serif;
+  --fonte-cond: 'Barlow Condensed', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--branco);
+  font-family: var(--fonte);
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* ── SCANLINES OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,136,0.015) 2px,
+    rgba(0,255,136,0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 60px;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Câmera animada */
+.cam-frame {
+  width: 340px;
+  height: 260px;
+  border: 2px solid var(--verde);
+  position: relative;
+  background: var(--bg2);
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,255,136,0.15), inset 0 0 40px rgba(0,0,0,0.8);
+}
+
+.cam-frame::before {
+  content: 'LIVE';
+  position: absolute;
+  top: 12px; right: 12px;
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--vermelho);
+  letter-spacing: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+.cam-frame::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--verde), transparent);
+  animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+  0%   { top: 0; opacity: 1; }
+  100% { top: 100%; opacity: 0.3; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Face detection box animado */
+.face-box {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px; height: 140px;
+}
+
+.face-box::before, .face-box::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--verde);
+  border-style: solid;
+}
+.face-box::before {
+  top: 0; left: 0;
+  border-width: 2px 0 0 2px;
+}
+.face-box::after {
+  bottom: 0; right: 0;
+  border-width: 0 2px 2px 0;
+}
+
+.face-box-tr, .face-box-bl {
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--verde);
+  border-style: solid;
+}
+.face-box-tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+.face-box-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+
+.face-icon {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 60px;
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.hud-line {
+  position: absolute;
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  color: var(--verde);
+}
+.hud-line:nth-child(1) { bottom: 40px; left: 12px; }
+.hud-line:nth-child(2) { bottom: 26px; left: 12px; }
+.hud-line:nth-child(3) { bottom: 12px; left: 12px; }
+.hud-date { top: 12px; left: 12px; color: var(--cinza); }
+
+.id-tag {
+  position: absolute;
+  bottom: -1px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--verde);
+  color: var(--bg);
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  padding: 4px 16px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  white-space: nowrap;
+  animation: flash 2s ease-in-out infinite;
+}
+
+@keyframes flash {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+.cam-noise {
+  position: absolute; inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ── BADGE STATUS ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.3);
+  padding: 6px 16px;
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--verde);
+  letter-spacing: 2px;
+  margin-bottom: 32px;
+}
+
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--verde);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.6); }
+  50%      { box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+}
+
+/* ── TÍTULO ── */
+.hero-title {
+  font-family: var(--fonte-cond);
+  font-size: clamp(52px, 7vw, 88px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  margin-bottom: 24px;
+}
+
+.title-green { color: var(--verde); }
+.title-dim   { color: var(--cinza); font-weight: 300; font-size: 0.55em; letter-spacing: 4px; display: block; font-family: var(--fonte-mono); margin-bottom: 8px; }
+
+.hero-desc {
+  font-size: 16px;
+  color: var(--cinza);
+  line-height: 1.7;
+  max-width: 480px;
+  margin-bottom: 40px;
+}
+
+/* ── BOTÕES ── */
+.btn-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--verde);
+  color: var(--bg);
+  font-weight: bold;
+}
+.btn-primary:hover {
+  background: #fff;
+  box-shadow: 0 0 30px rgba(0,255,136,0.5);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--verde);
+  border: 1px solid var(--verde);
+}
+.btn-outline:hover {
+  background: rgba(0,255,136,0.1);
+  box-shadow: 0 0 20px rgba(0,255,136,0.2);
+}
+
+/* ── GRID BG ── */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  background: var(--bg2);
+  border-top: 1px solid rgba(0,255,136,0.15);
+  border-bottom: 1px solid rgba(0,255,136,0.15);
+  display: flex;
+  justify-content: center;
+  gap: 0;
+}
+
+.stat {
+  flex: 1;
+  max-width: 200px;
+  padding: 28px 20px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.stat:last-child { border-right: none; }
+
+.stat-num {
+  font-family: var(--fonte-cond);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--verde);
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  color: var(--cinza);
+  letter-spacing: 2px;
+  margin-top: 6px;
+}
+
+/* ── SEÇÕES ── */
+section { padding: 100px 60px; max-width: 1200px; margin: 0 auto; }
+
+.section-label {
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--verde);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: var(--fonte-cond);
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 60px;
+}
+
+/* ── ARQUITETURA ── */
+.arch-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 60px;
+}
+
+.arch-node {
+  background: var(--bg2);
+  border: 1px solid rgba(0,255,136,0.2);
+  padding: 20px 24px;
+  text-align: center;
+  min-width: 130px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.arch-node:hover {
+  border-color: var(--verde);
+  box-shadow: 0 0 20px rgba(0,255,136,0.15);
+  transform: translateY(-4px);
+}
+
+.arch-node-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.arch-node-name {
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--verde);
+  letter-spacing: 1px;
+}
+
+.arch-node-sub {
+  font-size: 10px;
+  color: var(--cinza);
+  margin-top: 4px;
+}
+
+.arch-arrow {
+  font-size: 20px;
+  color: rgba(0,255,136,0.4);
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+/* ── TECH GRID ── */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.tech-card {
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 20px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--verde);
+  transform: scaleX(0);
+  transition: transform 0.3s;
+}
+
+.tech-card:hover::before { transform: scaleX(1); }
+.tech-card:hover {
+  border-color: rgba(0,255,136,0.2);
+  background: var(--bg3);
+}
+
+.tech-name {
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  color: var(--branco);
+  margin-bottom: 4px;
+}
+
+.tech-role {
+  font-size: 11px;
+  color: var(--cinza);
+}
+
+.tech-badge {
+  display: inline-block;
+  font-family: var(--fonte-mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+.badge-ia     { background: rgba(0,255,136,0.15); color: var(--verde); }
+.badge-cloud  { background: rgba(0,170,255,0.15); color: var(--azul); }
+.badge-mobile { background: rgba(255,204,0,0.15);  color: var(--amarelo); }
+.badge-infra  { background: rgba(255,51,68,0.15);  color: var(--vermelho); }
+
+/* ── MÓDULOS ── */
+.modulos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.modulo-card {
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 28px;
+  transition: all 0.3s;
+}
+
+.modulo-card:hover {
+  border-color: rgba(0,255,136,0.3);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+
+.modulo-num {
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--verde);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.modulo-name {
+  font-family: var(--fonte-cond);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.modulo-desc {
+  font-size: 13px;
+  color: var(--cinza);
+  line-height: 1.6;
+}
+
+/* ── TEAM ── */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.team-card {
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 36px 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.team-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.team-card:nth-child(1)::before { background: var(--verde); }
+.team-card:nth-child(2)::before { background: var(--azul); }
+.team-card:nth-child(3)::before { background: var(--amarelo); }
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.team-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 20px;
+  border: 2px solid rgba(255,255,255,0.08);
+}
+
+.team-name {
+  font-family: var(--fonte-cond);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.team-role {
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.team-card:nth-child(1) .team-role { color: var(--verde); }
+.team-card:nth-child(2) .team-role { color: var(--azul); }
+.team-card:nth-child(3) .team-role { color: var(--amarelo); }
+
+.team-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.tag {
+  font-family: var(--fonte-mono);
+  font-size: 9px;
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.05);
+  color: var(--cinza);
+  letter-spacing: 1px;
+}
+
+/* ── FLUXO OPERACIONAL ── */
+.fluxo-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  max-width: 700px;
+}
+
+.fluxo-step {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border: 2px solid var(--verde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  color: var(--verde);
+}
+
+.step-content h4 {
+  font-family: var(--fonte-cond);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.step-content p {
+  font-size: 13px;
+  color: var(--cinza);
+  line-height: 1.6;
+}
+
+/* ── STATUS ── */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg2);
+  padding: 16px 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.ok      { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+.status-dot.pending { background: var(--amarelo); }
+.status-dot.off     { background: var(--cinza); }
+
+.status-text {
+  font-size: 13px;
+  color: var(--branco);
+}
+
+.status-sub {
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  color: var(--cinza);
+  margin-top: 2px;
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--bg2);
+  border-top: 1px solid rgba(0,255,136,0.1);
+  padding: 40px 60px;
+  text-align: center;
+}
+
+.footer-title {
+  font-family: var(--fonte-cond);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--verde);
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.footer-sub {
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--cinza);
+  letter-spacing: 3px;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,136,0.2), transparent);
+  margin: 0 60px;
+}
+
+/* ── ANIMAÇÕES DE ENTRADA ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── NAVBAR ── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(6,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,255,136,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 52px;
+}
+.navbar-brand {
+  font-family: var(--fonte-cond);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--verde);
+}
+.navbar-links {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+}
+.navbar-links a {
+  font-family: var(--fonte-mono);
+  font-size: 10px;
+  color: var(--cinza);
+  text-decoration: none;
+  letter-spacing: 1.5px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.navbar-links a:hover {
+  color: var(--verde);
+  border-color: rgba(0,255,136,0.3);
+}
+
+/* ── EXECUTAR SECTION ── */
+.exec-steps { display: flex; flex-direction: column; gap: 20px; margin-top: 32px; }
+.exec-step {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 20px;
+  align-items: flex-start;
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 24px;
+}
+.exec-step-num {
+  font-family: var(--fonte-cond);
+  font-size: 32px;
+  font-weight: 900;
+  color: rgba(0,255,136,0.25);
+  line-height: 1;
+}
+.exec-step h4 {
+  font-family: var(--fonte-cond);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--branco);
+  margin-bottom: 10px;
+}
+.exec-step p { font-size: 13px; color: var(--cinza); line-height: 1.7; margin-bottom: 12px; }
+.exec-code {
+  background: var(--bg);
+  border-left: 3px solid var(--verde);
+  padding: 12px 16px;
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  color: var(--verde);
+  line-height: 1.8;
+  overflow-x: auto;
+}
+
+/* ── CÓDIGO FONTE SECTION ── */
+.repo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 32px; }
+.repo-card {
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+.repo-card:hover { border-color: rgba(0,255,136,0.3); }
+.repo-card-num { font-family: var(--fonte-mono); font-size: 10px; color: rgba(0,255,136,0.4); letter-spacing: 2px; margin-bottom: 10px; }
+.repo-card h4 { font-family: var(--fonte-cond); font-size: 15px; font-weight: 700; letter-spacing: 1px; color: var(--branco); margin-bottom: 8px; }
+.repo-card p { font-size: 12px; color: var(--cinza); line-height: 1.7; margin-bottom: 14px; }
+.repo-card code { font-family: var(--fonte-mono); font-size: 10px; color: var(--azul); }
+.repo-link-box {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--bg2);
+  border: 1px solid rgba(0,255,136,0.2);
+  padding: 24px 28px;
+  margin-top: 24px;
+}
+.repo-link-url { font-family: var(--fonte-mono); font-size: 12px; color: var(--verde); }
+.btn-repo {
+  margin-left: auto;
+  font-family: var(--fonte-cond);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--bg);
+  background: var(--verde);
+  border: none;
+  padding: 10px 20px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.btn-repo:hover { opacity: 0.85; }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  section { padding: 60px 24px; }
+  .team-grid { grid-template-columns: 1fr; }
+  .stats-bar { flex-wrap: wrap; }
+  footer { padding: 40px 24px; }
+  .divider { margin: 0 24px; }
+  .navbar { padding: 0 24px; }
+  .navbar-links { display: none; }
+  .exec-step { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
 
-<header>
-    <div id="container-top">
-        <img src="assets/imagem_satelite.png" alt="Logotipo do Projeto Rastreador" class="logo-imagem">
-        <h1>Protego IA</h1>
+<!-- ═══ NAVBAR ═══ -->
+<nav class="navbar">
+  <div class="navbar-brand">PROTEGO IA</div>
+  <ul class="navbar-links">
+    <li><a href="#arquitetura">ARQUITETURA</a></li>
+    <li><a href="#tecnologias">STACK</a></li>
+    <li><a href="#modulos">BACKEND</a></li>
+    <li><a href="#operacao">OPERAÇÃO</a></li>
+    <li><a href="#status">STATUS</a></li>
+    <li><a href="#mqtt">MQTT</a></li>
+    <li><a href="#executar">EXECUTAR</a></li>
+    <li><a href="#codigo">CÓDIGO</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      SISTEMA ATIVO · V2.0
     </div>
-    <nav>
-        <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#plataforma">Plataforma</a></li>
-            <li><a href="#dispositivo">Dispositivo</a></li>
-            <li><a href="#aplicativo">Aplicativo</a></li>
-        </ul>
-    </nav>
-</header>
 
-<main>
-    <section id="home">
-        <h2>Home</h2>
-        <p>Conteúdo da seção Home...</p>
-    </section>
-    <section id="plataforma">
-        <h2>Plataforma</h2>
-        <p>Conteúdo da seção Plataforma...</p>
-    </section>
-    <section id="dispositivo">
-        <h2>Dispositivo</h2>
-        <p>Conteúdo da seção Dispositivo...</p>
-    </section>
-    <section id="aplicativo">
-        <h2>Aplicativo</h2>
-        <p>Conteúdo da seção Aplicativo...</p>
-    </section>
-</main>
+    <h1 class="hero-title">
+      <span class="title-dim">// PROJETO</span>
+      <span class="title-green">PROTEGO</span><br>IA
+    </h1>
 
+    <p class="hero-desc">
+      Sistema de reconhecimento facial em tempo real para operações policiais.
+      Identifica alvos, exibe fichas completas e emite alertas instantâneos
+      via MQTT — do ESP32-CAM ao app Flutter, tudo integrado na nuvem.
+    </p>
+
+    <div class="btn-row">
+      <a href="https://github.com/PedroLucas003/protego_IA" class="btn btn-primary" target="_blank">
+        ⟢ VER REPOSITÓRIO
+      </a>
+      <a href="#arquitetura" class="btn btn-outline">
+        ↓ SAIBA MAIS
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="cam-frame">
+      <div class="cam-noise"></div>
+      <span class="hud-line hud-date" style="position:absolute;top:12px;left:12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#8899aa;">23/03/2026 &nbsp; 01:10:36</span>
+      <div class="face-box" style="animation: none;">
+        <div class="face-box-tr"></div>
+        <div class="face-box-bl"></div>
+        <div class="face-icon">👤</div>
+      </div>
+      <div class="hud-line" style="bottom:54px;left:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:#00ff88;">■ RECONHECIDO</div>
+      <div class="hud-line" style="bottom:40px;left:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:#ffcc00;">PERIGO: ALTO</div>
+      <div class="hud-line" style="bottom:26px;left:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:#0af;">CONFIANÇA: 92.5%</div>
+      <div class="hud-line" style="bottom:12px;left:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:#ff3344;">⚠ MANDADO ATIVO</div>
+      <div class="id-tag">ALVO IDENTIFICADO</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">512</div>
+    <div class="stat-label">DIMS / ARCFACE</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">99%</div>
+    <div class="stat-label">PRECISÃO LFW</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">60+</div>
+    <div class="stat-label">FPS DISPLAY</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">7</div>
+    <div class="stat-label">MÓDULOS BACKEND</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">3</div>
+    <div class="stat-label">DEVS NO PROJETO</div>
+  </div>
+</div>
+
+<!-- ═══ ARQUITETURA ═══ -->
+<section id="arquitetura">
+  <div class="reveal">
+    <div class="section-label">// 01 — ARQUITETURA</div>
+    <h2 class="section-title">Fluxo do Sistema</h2>
+  </div>
+
+  <div class="arch-flow reveal">
+    <div class="arch-node">
+      <div class="arch-node-icon">📷</div>
+      <div class="arch-node-name">ESP32-CAM</div>
+      <div class="arch-node-sub">Stream MJPEG</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-icon">🤖</div>
+      <div class="arch-node-name">Python IA</div>
+      <div class="arch-node-sub">InsightFace ArcFace</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-icon">📡</div>
+      <div class="arch-node-name">MQTT</div>
+      <div class="arch-node-sub">Mosquitto / Railway</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-icon">⚡</div>
+      <div class="arch-node-name">FastAPI</div>
+      <div class="arch-node-sub">REST + WebSocket</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-icon">📱</div>
+      <div class="arch-node-name">Flutter</div>
+      <div class="arch-node-sub">App do Policial</div>
+    </div>
+  </div>
+
+  <div class="arch-flow reveal" style="margin-top:16px;">
+    <div class="arch-node" style="min-width:200px;">
+      <div class="arch-node-icon">🗄️</div>
+      <div class="arch-node-name">PostgreSQL</div>
+      <div class="arch-node-sub">Railway Cloud · Alvos + Detecções</div>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-node" style="min-width:200px;">
+      <div class="arch-node-icon">☁️</div>
+      <div class="arch-node-name">Railway</div>
+      <div class="arch-node-sub">PostgreSQL + Mosquitto + FastAPI</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ TECNOLOGIAS ═══ -->
+<section id="tecnologias">
+  <div class="reveal">
+    <div class="section-label">// 02 — STACK</div>
+    <h2 class="section-title">Tecnologias Utilizadas</h2>
+  </div>
+
+  <div class="tech-grid reveal">
+    <div class="tech-card">
+      <div class="tech-name">InsightFace</div>
+      <div class="tech-role">Motor de reconhecimento facial</div>
+      <span class="tech-badge badge-ia">IA</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">ArcFace</div>
+      <div class="tech-role">Embedding 512 dimensões</div>
+      <span class="tech-badge badge-ia">IA</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">DeepFace</div>
+      <div class="tech-role">Estimativa de emoção</div>
+      <span class="tech-badge badge-ia">IA</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">OpenCV</div>
+      <div class="tech-role">Processamento de vídeo</div>
+      <span class="tech-badge badge-ia">IA</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">FastAPI</div>
+      <div class="tech-role">API REST + WebSocket</div>
+      <span class="tech-badge badge-cloud">CLOUD</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">PostgreSQL</div>
+      <div class="tech-role">Banco de dados principal</div>
+      <span class="tech-badge badge-cloud">CLOUD</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Mosquitto</div>
+      <div class="tech-role">Broker MQTT</div>
+      <span class="tech-badge badge-cloud">CLOUD</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Railway</div>
+      <div class="tech-role">Infraestrutura cloud</div>
+      <span class="tech-badge badge-infra">INFRA</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Flutter</div>
+      <div class="tech-role">App mobile do policial</div>
+      <span class="tech-badge badge-mobile">MOBILE</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">ESP32-CAM</div>
+      <div class="tech-role">Hardware da bodycam</div>
+      <span class="tech-badge badge-infra">HARDWARE</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">paho-mqtt</div>
+      <div class="tech-role">Cliente MQTT Python</div>
+      <span class="tech-badge badge-ia">IA</span>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">psycopg2</div>
+      <div class="tech-role">Conector PostgreSQL</div>
+      <span class="tech-badge badge-cloud">CLOUD</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ MÓDULOS ═══ -->
+<section id="modulos">
+  <div class="reveal">
+    <div class="section-label">// 03 — BACKEND</div>
+    <h2 class="section-title">7 Módulos do Backend</h2>
+  </div>
+
+  <div class="modulos-grid reveal">
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 01</div>
+      <div class="modulo-name">TratarDados</div>
+      <div class="modulo-desc">JSON Schema para validação de todos os payloads MQTT e REST. Garante consistência e integridade dos dados entre os módulos.</div>
+    </div>
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 02</div>
+      <div class="modulo-name">GestaoDevice</div>
+      <div class="modulo-desc">Gerencia as câmeras ESP32 cadastradas. Controla status online/offline, IP e ativação dos dispositivos de campo.</div>
+    </div>
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 03</div>
+      <div class="modulo-name">BrokerMQTT</div>
+      <div class="modulo-desc">Camada de comunicação em tempo real. Tópicos: reconhecimento/facial, reconhecimento/status, reconhecimento/comando.</div>
+    </div>
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 04</div>
+      <div class="modulo-name">OTA</div>
+      <div class="modulo-desc">Over The Air Update — atualização remota do firmware do ESP32 sem necessidade de conexão física via USB.</div>
+    </div>
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 05</div>
+      <div class="modulo-name">ServicosAPI</div>
+      <div class="modulo-desc">API REST principal consumida pelo Flutter. Endpoints para pessoas, mandados, histórico criminal e detecções.</div>
+    </div>
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 06</div>
+      <div class="modulo-name">Negocio</div>
+      <div class="modulo-desc">Regras de negócio centralizadas: níveis de alerta por perigo, cooldown de notificações, validação de prova de vida.</div>
+    </div>
+    <div class="modulo-card">
+      <div class="modulo-num">MOD · 07</div>
+      <div class="modulo-name">Administracao</div>
+      <div class="modulo-desc">Painel para gestão de alvos, geração de encodings via foto, logs do sistema e relatórios de abordagens.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ FLUXO OPERACIONAL ═══ -->
+<section id="operacao">
+  <div class="reveal">
+    <div class="section-label">// 04 — OPERAÇÃO</div>
+    <h2 class="section-title">Fluxo de Uso</h2>
+  </div>
+
+  <div class="fluxo-steps reveal">
+    <div class="fluxo-step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h4>Policial pluga a bodycam</h4>
+        <p>O ESP32-CAM inicializa automaticamente, conecta ao WiFi e começa a transmitir o stream MJPEG. Nenhum software precisa ser aberto manualmente.</p>
+      </div>
+    </div>
+    <div class="fluxo-step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h4>IA processa os rostos</h4>
+        <p>O InsightFace ArcFace detecta e gera embeddings de 512 dimensões para cada rosto no frame. A comparação é feita por similaridade coseno contra o banco de alvos.</p>
+      </div>
+    </div>
+    <div class="fluxo-step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h4>Alvo identificado</h4>
+        <p>A ficha completa é exibida em overlay: nome, nível de perigo, mandados ativos, crimes e emoção detectada pelo DeepFace. Beep sonoro proporcional ao perigo.</p>
+      </div>
+    </div>
+    <div class="fluxo-step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <h4>Alerta via MQTT → Flutter</h4>
+        <p>A ficha é publicada no broker MQTT, o FastAPI recebe e encaminha via WebSocket para o app Flutter do policial em tempo real.</p>
+      </div>
+    </div>
+    <div class="fluxo-step">
+      <div class="step-num">05</div>
+      <div class="step-content">
+        <h4>Registro no banco</h4>
+        <p>A abordagem é registrada no PostgreSQL com timestamp, câmera, confiança e foto capturada — formando o histórico completo de operações.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ STATUS ═══ -->
+<section id="status">
+  <div class="reveal">
+    <div class="section-label">// 05 — STATUS</div>
+    <h2 class="section-title">Estado do Projeto</h2>
+  </div>
+
+  <div class="status-grid reveal">
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">Reconhecimento Facial</div>
+        <div class="status-sub">InsightFace ArcFace · operacional</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">Stream ESP32-CAM</div>
+        <div class="status-sub">MJPEG · 60+ FPS display</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">Banco de Dados</div>
+        <div class="status-sub">PostgreSQL Railway · online</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">MQTT Broker</div>
+        <div class="status-sub">Mosquitto Railway · online</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">Anti-Spoofing</div>
+        <div class="status-sub">Laplacian + saturação HSV</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">Detecção de Emoção</div>
+        <div class="status-sub">DeepFace · 7 emoções</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      <div>
+        <div class="status-text">FastAPI</div>
+        <div class="status-sub">REST + WebSocket · online</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot pending"></div>
+      <div>
+        <div class="status-text">Flutter App</div>
+        <div class="status-sub">Em desenvolvimento</div>
+      </div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot pending"></div>
+      <div>
+        <div class="status-text">OTA Update</div>
+        <div class="status-sub">Planejado</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ EQUIPE ═══ -->
+<section id="equipe">
+  <div class="reveal">
+    <div class="section-label">// 06 — EQUIPE</div>
+    <h2 class="section-title">Trio de Desenvolvimento</h2>
+  </div>
+
+  <div class="team-grid reveal">
+    <div class="team-card">
+      <div class="team-avatar">🤖</div>
+      <div class="team-name">Pedro Lucas</div>
+      <div class="team-role">IA & HARDWARE</div>
+      <div class="team-tags">
+        <span class="tag">ESP32-CAM</span>
+        <span class="tag">InsightFace</span>
+        <span class="tag">Python</span>
+        <span class="tag">OpenCV</span>
+        <span class="tag">DeepFace</span>
+        <span class="tag">MQTT Client</span>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">☁️</div>
+      <div class="team-name">Guilherme Viana</div>
+      <div class="team-role">CLOUD & BACKEND</div>
+      <div class="team-tags">
+        <span class="tag">FastAPI</span>
+        <span class="tag">Railway</span>
+        <span class="tag">PostgreSQL</span>
+        <span class="tag">Mosquitto</span>
+        <span class="tag">Docker</span>
+        <span class="tag">WebSocket</span>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">📱</div>
+      <div class="team-name">Julio Rozo</div>
+      <div class="team-role">MOBILE</div>
+      <div class="team-tags">
+        <span class="tag">Flutter</span>
+        <span class="tag">Dart</span>
+        <span class="tag">WebSocket</span>
+        <span class="tag">REST API</span>
+        <span class="tag">UI/UX</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div class="divider"></div>
+
+<!-- ═══ MQTT ═══ -->
+<section id="mqtt">
+  <div class="reveal">
+    <div class="section-label">// 07 — MQTT & BANCO</div>
+    <h2 class="section-title">Integração MQTT + Dados</h2>
+  </div>
+
+  <!-- Objetivo -->
+  <div class="reveal" style="margin-bottom:48px;">
+    <p style="font-size:15px;color:var(--cinza);line-height:1.8;max-width:700px;">
+      O sistema recebe mensagens via protocolo MQTT, processa os eventos
+      e persiste os dados no PostgreSQL — garantindo rastreabilidade
+      completa de todas as abordagens realizadas em campo.
+    </p>
+  </div>
+
+  <!-- Fluxo MQTT -->
+  <div class="reveal" style="margin-bottom:60px;">
+    <div class="section-label" style="margin-bottom:24px;">FLUXO DE DADOS</div>
+    <div class="arch-flow" style="flex-wrap:wrap;gap:0;">
+      <div class="arch-node">
+        <div class="arch-node-icon">🐍</div>
+        <div class="arch-node-name">Python IA</div>
+        <div class="arch-node-sub">Cliente MQTT</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">📡</div>
+        <div class="arch-node-name">EMQX</div>
+        <div class="arch-node-sub">Broker MQTT</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">⚙️</div>
+        <div class="arch-node-name">Rule Engine</div>
+        <div class="arch-node-sub">Intercepta evento</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">🌐</div>
+        <div class="arch-node-name">HTTP</div>
+        <div class="arch-node-sub">EMQX → FastAPI</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">⚡</div>
+        <div class="arch-node-name">FastAPI</div>
+        <div class="arch-node-sub">/mqtt-eventos</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">🗄️</div>
+        <div class="arch-node-name">PostgreSQL</div>
+        <div class="arch-node-sub">Persistência</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Componentes e Tópicos lado a lado -->
+  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px;">
+
+    <!-- Componentes -->
+    <div>
+      <div class="section-label" style="margin-bottom:20px;">COMPONENTES</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <div class="status-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="status-dot ok"></div>
+            <span style="font-family:var(--fonte-mono);font-size:12px;color:var(--verde);">EMQX — Broker MQTT</span>
+          </div>
+          <div class="status-sub" style="padding-left:20px;">Recebe e distribui mensagens · Rule Engine ativo · Dashboard Railway</div>
+        </div>
+
+        <div class="status-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="status-dot ok"></div>
+            <span style="font-family:var(--fonte-mono);font-size:12px;color:var(--verde);">FastAPI — API REST</span>
+          </div>
+          <div class="status-sub" style="padding-left:20px;">Recebe HTTP do EMQX · processa · salva no banco · endpoint /mqtt-eventos</div>
+        </div>
+
+        <div class="status-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="status-dot ok"></div>
+            <span style="font-family:var(--fonte-mono);font-size:12px;color:var(--verde);">PostgreSQL — Banco</span>
+          </div>
+          <div class="status-sub" style="padding-left:20px;">Armazena topic · payload · timestamp de cada evento</div>
+        </div>
+
+        <div class="status-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="status-dot ok"></div>
+            <span style="font-family:var(--fonte-mono);font-size:12px;color:var(--verde);">Railway — Infra</span>
+          </div>
+          <div class="status-sub" style="padding-left:20px;">Hospeda EMQX · FastAPI · PostgreSQL · proxy TCP MQTT</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tópicos MQTT -->
+    <div>
+      <div class="section-label" style="margin-bottom:20px;">TÓPICOS MQTT</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <div style="background:var(--bg2);border:1px solid rgba(0,255,136,0.2);padding:16px 20px;">
+          <div style="font-family:var(--fonte-mono);font-size:12px;color:var(--verde);margin-bottom:4px;">reconhecimento/facial</div>
+          <div style="font-size:12px;color:var(--cinza);">Ficha completa do alvo identificado — publicado pela IA Python</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.06);padding:16px 20px;">
+          <div style="font-family:var(--fonte-mono);font-size:12px;color:var(--azul);margin-bottom:4px;">reconhecimento/status</div>
+          <div style="font-size:12px;color:var(--cinza);">Status online/offline da bodycam — publicado no boot e encerramento</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.06);padding:16px 20px;">
+          <div style="font-family:var(--fonte-mono);font-size:12px;color:var(--amarelo);margin-bottom:4px;">reconhecimento/comando</div>
+          <div style="font-size:12px;color:var(--cinza);">Ativar/parar IA remotamente via app Flutter</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+        <!-- Port Mapping -->
+        <div style="background:var(--bg2);border:1px solid rgba(0,170,255,0.2);padding:24px 28px;margin-top:24px;" class="reveal">
+          <div style="font-family:var(--fonte-mono);font-size:11px;color:var(--azul);letter-spacing:2px;margin-bottom:16px;">PORT MAPPING — RAILWAY</div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <div style="font-family:var(--fonte-mono);font-size:22px;font-weight:bold;color:var(--verde);">28372</div>
+              <div style="font-family:var(--fonte-mono);font-size:10px;color:var(--cinza);margin-top:4px;">PORTA EXTERNA (proxy)</div>
+            </div>
+            <div style="font-size:24px;color:rgba(0,170,255,0.5);">→</div>
+            <div style="text-align:center;">
+              <div style="font-family:var(--fonte-mono);font-size:22px;font-weight:bold;color:var(--azul);">1883</div>
+              <div style="font-family:var(--fonte-mono);font-size:10px;color:var(--cinza);margin-top:4px;">PORTA INTERNA (EMQX)</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--cinza);margin-top:16px;line-height:1.7;">
+            No Railway a porta <span style="color:var(--verde);font-family:var(--fonte-mono);">1883</span> é a padrão MQTT dentro do container.
+            A porta <span style="color:var(--verde);font-family:var(--fonte-mono);">28372</span> é a porta pública gerada pelo Railway que redireciona para ela.
+            Isso é padrão em ambientes cloud/containerizados — a infraestrutura faz o mapeamento de portas automaticamente.
+          </p>
+        </div>
+
+  <!-- Payload exemplo -->
+  <div class="reveal">
+    <div class="section-label" style="margin-bottom:16px;">EXEMPLO DE PAYLOAD — reconhecimento/facial</div>
+    <div style="background:var(--bg2);border:1px solid rgba(0,255,136,0.15);padding:28px;font-family:var(--fonte-mono);font-size:12px;line-height:1.9;overflow-x:auto;">
+      <span style="color:rgba(136,153,170,0.6);">{</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"timestamp"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--amarelo);">"2026-03-23T01:10:36"</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"nome"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--amarelo);">"CARLOS ALBERTO MENDES SILVA"</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"nivel_perigo"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--vermelho);">"CRITICO"</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"status"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--vermelho);">"FORAGIDO"</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"mandados"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--verde);">["PRISAO", "BUSCA"]</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"confianca"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--verde);">92.5</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"prova_de_vida"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--verde);">true</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"tem_mandado"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--verde);">true</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"emocao"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--amarelo);">"Neutro"</span><span style="color:rgba(136,153,170,0.6);">,</span><br>
+      &nbsp;&nbsp;<span style="color:var(--azul);">"camera_ip"</span><span style="color:rgba(136,153,170,0.6);">:</span> <span style="color:var(--amarelo);">"192.168.1.91"</span><br>
+      <span style="color:rgba(136,153,170,0.6);">}</span>
+    </div>
+  </div>
+
+  <!-- Conclusão -->
+  <div class="reveal" style="margin-top:48px;background:var(--bg2);border-left:3px solid var(--verde);padding:24px 28px;">
+    <div style="font-family:var(--fonte-mono);font-size:11px;color:var(--verde);letter-spacing:2px;margin-bottom:10px;">CONCLUSÃO</div>
+    <p style="font-size:14px;color:var(--cinza);line-height:1.8;">
+      Foi possível integrar com sucesso o broker MQTT EMQX ao banco de dados PostgreSQL,
+      utilizando uma arquitetura adaptada para ambiente de produção no Railway.
+      O Rule Engine do EMQX intercepta cada mensagem publicada e a encaminha via HTTP
+      para o FastAPI, que persiste os dados e os disponibiliza via API REST —
+      garantindo o funcionamento completo do fluxo de dados de ponta a ponta.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ COMO EXECUTAR ═══ -->
+<section id="executar">
+  <div class="reveal">
+    <div class="section-label">// 08 — EXECUÇÃO</div>
+    <h2 class="section-title">Como Executar o Projeto</h2>
+  </div>
+
+  <div class="exec-steps">
+
+    <div class="exec-step reveal">
+      <div class="exec-step-num">01</div>
+      <div>
+        <h4>CLONE O REPOSITÓRIO</h4>
+        <div class="exec-code">git clone https://github.com/PedroLucas003/protego_IA.git<br>cd protego_IA</div>
+      </div>
+    </div>
+
+    <div class="exec-step reveal">
+      <div class="exec-step-num">02</div>
+      <div>
+        <h4>SUBA A INFRAESTRUTURA COM DOCKER</h4>
+        <p>Inicia os 4 serviços em containers: Mosquitto, EMQX, FastAPI e PostgreSQL.</p>
+        <div class="exec-code">cd backend_nuvem<br>docker compose up -d</div>
+      </div>
+    </div>
+
+    <div class="exec-step reveal">
+      <div class="exec-step-num">03</div>
+      <div>
+        <h4>INSTALE AS DEPENDÊNCIAS PYTHON</h4>
+        <div class="exec-code">pip install -r requirements.txt</div>
+      </div>
+    </div>
+
+    <div class="exec-step reveal">
+      <div class="exec-step-num">04</div>
+      <div>
+        <h4>ADICIONE FOTOS AO BANCO DE FACES</h4>
+        <p>Coloque arquivos <code style="color:var(--verde);font-family:var(--fonte-mono);">.jpg</code> ou <code style="color:var(--verde);font-family:var(--fonte-mono);">.png</code> na pasta <code style="color:var(--verde);font-family:var(--fonte-mono);">banco_faces/</code>. O nome do arquivo vira o nome reconhecido.</p>
+        <div class="exec-code">banco_faces/<br>&nbsp;&nbsp;joao_silva.jpg &nbsp;&nbsp;&nbsp;→ reconhecido como JOAO_SILVA<br>&nbsp;&nbsp;criminoso_1.jpg &nbsp;→ reconhecido como CRIMINOSO_1</div>
+      </div>
+    </div>
+
+    <div class="exec-step reveal">
+      <div class="exec-step-num">05</div>
+      <div>
+        <h4>CONFIGURE O IP DO ESP32 E EXECUTE A IA</h4>
+        <div class="exec-code"># Em reconhecimento_final.py<br>IP_ESP32 = "SEU_IP_AQUI" &nbsp;# ex: 192.168.1.91<br><br>python reconhecimento_final.py</div>
+      </div>
+    </div>
+
+    <div class="exec-step reveal">
+      <div class="exec-step-num">06</div>
+      <div>
+        <h4>ACESSE A API E O DASHBOARD EMQX</h4>
+        <div class="exec-code">API REST &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ http://localhost:8000<br>Swagger UI &nbsp;&nbsp;&nbsp;→ http://localhost:8000/docs<br>EMQX Dashboard → http://localhost:18083 &nbsp;(admin / public)</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ CÓDIGO FONTE ═══ -->
+<section id="codigo">
+  <div class="reveal">
+    <div class="section-label">// 09 — REPOSITÓRIO</div>
+    <h2 class="section-title">Código Fonte</h2>
+  </div>
+  <div class="reveal" style="margin-bottom:32px;">
+    <p style="font-size:15px;color:var(--cinza);line-height:1.8;max-width:700px;">
+      O projeto está organizado em módulos independentes dentro do repositório principal,
+      cada um responsável por uma camada do sistema.
+    </p>
+  </div>
+
+  <div class="repo-grid reveal">
+    <div class="repo-card">
+      <div class="repo-card-num">MOD · IA</div>
+      <h4>Reconhecimento Facial</h4>
+      <p>Python com OpenCV + face_recognition. Lê o stream do ESP32 e compara rostos com o banco de faces local.</p>
+      <code>reconhecimento_final.py</code>
+    </div>
+    <div class="repo-card">
+      <div class="repo-card-num">MOD · CLOUD</div>
+      <h4>Backend Nuvem</h4>
+      <p>FastAPI + PostgreSQL + MQTT em Docker. API REST completa com ingestão de eventos e persistência.</p>
+      <code>backend_nuvem/</code>
+    </div>
+    <div class="repo-card">
+      <div class="repo-card-num">MOD · IOT</div>
+      <h4>MQTT Subscriber</h4>
+      <p>Subscriber Python que escuta o broker EMQX e encaminha eventos ao backend via HTTP.</p>
+      <code>backend_nuvem/subscriber/</code>
+    </div>
+    <div class="repo-card">
+      <div class="repo-card-num">MOD · APP</div>
+      <h4>Frontend App</h4>
+      <p>Aplicativo Flutter para monitoramento em tempo real e consulta de suspeitos em campo.</p>
+      <code>frontend_app/</code>
+    </div>
+  </div>
+
+  <div class="repo-link-box reveal">
+    <div>
+      <div style="font-family:var(--fonte-mono);font-size:10px;color:var(--cinza);letter-spacing:2px;margin-bottom:6px;">REPOSITÓRIO PRINCIPAL</div>
+      <div class="repo-link-url">github.com/PedroLucas003/protego_IA</div>
+    </div>
+    <a href="https://github.com/PedroLucas003/protego_IA" target="_blank" class="btn-repo">⟢ VER NO GITHUB</a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="footer-title">PROTEGO IA</div>
+  <div class="footer-sub" style="margin-top:8px;">SISTEMA DE RECONHECIMENTO FACIAL · 2026</div>
+  <div style="margin-top:24px;font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(136,153,170,0.5);">
+    InsightFace ArcFace · DeepFace · ESP32-CAM · FastAPI · PostgreSQL · Flutter
+  </div>
+</footer>
+
+<script>
+// Reveal on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 100);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Typing effect no terminal da câmera
+const hudDate = document.querySelector('.hud-date');
+function updateTime() {
+  const now = new Date();
+  const d = now.toLocaleDateString('pt-BR').replace(/\//g, '/');
+  const t = now.toLocaleTimeString('pt-BR');
+  if (hudDate) hudDate.textContent = `${d}   ${t}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// Corner animation na face-box
+const faceBox = document.querySelector('.face-box');
+if (faceBox) {
+  let pos = 0;
+  setInterval(() => {
+    pos = (pos + 1) % 4;
+    const offsets = [
+      {top:'30%',left:'20%'}, {top:'25%',left:'55%'},
+      {top:'55%',left:'50%'}, {top:'50%',left:'25%'}
+    ];
+    faceBox.style.top  = offsets[pos].top;
+    faceBox.style.left = offsets[pos].left;
+    faceBox.style.transition = 'top 1.5s ease, left 1.5s ease';
+  }, 2000);
+}
+</script>
 </body>
 </html>
