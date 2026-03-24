@@ -113,10 +113,14 @@ def cadastrar_alvo():
         cur  = conn.cursor()
         cur.execute("""
             INSERT INTO pessoas
-                (nome_completo, cpf, rg, nivel_perigo, status, observacoes, encoding)
-            VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb)
+                (nome, cpf, rg, nivel_perigo, status, observacoes,
+                 mandados, crimes, artigos,
+                 confianca, prova_de_vida, tem_mandado, timestamp, encoding)
+            VALUES (%s, %s, %s, %s, %s, %s,
+                    '[]'::jsonb, '[]'::jsonb, '[]'::jsonb,
+                    %s, %s, %s, NOW(), %s::jsonb)
             RETURNING id
-        """, (nome, cpf, rg, perigo, status, obs, encoding_json))
+        """, (nome, cpf, rg, perigo, status, obs, 0.0, False, False, encoding_json))
         pid = cur.fetchone()[0]
         conn.commit()
         cur.close()
@@ -135,7 +139,7 @@ def listar_alvos():
     try:
         conn = get_conn()
         cur  = conn.cursor()
-        cur.execute("SELECT id, nome_completo, nivel_perigo, status FROM pessoas ORDER BY nome_completo")
+        cur.execute("SELECT id, nome, nivel_perigo, status FROM pessoas ORDER BY nome")
         rows = cur.fetchall()
         cur.close()
         conn.close()

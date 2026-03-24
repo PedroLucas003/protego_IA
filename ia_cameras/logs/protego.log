@@ -1,0 +1,225 @@
+2026-03-23 00:53:38,353 [INFO] Carregando InsightFace buffalo_l (primeira vez baixa ~200MB)...
+2026-03-23 00:53:39,156 [INFO] InsightFace pronto.
+2026-03-23 00:53:39,156 [INFO] Carregando alvos do banco...
+2026-03-23 00:53:42,062 [ERROR] Erro ao carregar alvos: column p.nome_completo does not exist
+LINE 3:                 p.id, p.nome_completo, p.cpf, p.rg,
+                              ^
+
+2026-03-23 00:53:42,179 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 00:53:44,194 [WARNING] Nao foi possivel configurar ESP32 via HTTP
+2026-03-23 00:53:44,194 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 00:53:49,209 [ERROR] Sem frames da camera: http://192.168.1.91:81/stream
+2026-03-23 00:54:24,225 [INFO] Carregando InsightFace buffalo_l (primeira vez baixa ~200MB)...
+2026-03-23 00:54:25,133 [INFO] InsightFace pronto.
+2026-03-23 00:54:25,133 [INFO] Carregando alvos do banco...
+2026-03-23 00:54:28,608 [ERROR] Erro ao carregar alvos: column p.nome_completo does not exist
+LINE 3:                 p.id, p.nome_completo, p.cpf, p.rg,
+                              ^
+
+2026-03-23 00:54:28,728 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 00:54:29,015 [INFO] ESP32 configurado: VGA, qualidade alta
+2026-03-23 00:54:29,015 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 00:54:29,217 [INFO] Stream recebido!
+2026-03-23 00:54:29,217 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 00:57:26,146 [INFO] Carregando InsightFace buffalo_l (primeira vez baixa ~200MB)...
+2026-03-23 00:57:27,311 [INFO] InsightFace pronto.
+2026-03-23 00:57:27,311 [INFO] Carregando alvos do banco...
+2026-03-23 00:57:30,393 [ERROR] Erro ao carregar alvos: the JSON object must be str, bytes or bytearray, not NoneType
+2026-03-23 00:57:30,503 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 00:57:30,725 [INFO] ESP32 configurado: VGA, qualidade alta
+2026-03-23 00:57:30,725 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 00:57:30,826 [INFO] Stream recebido!
+2026-03-23 00:57:30,826 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:01:47,632 [INFO] Carregando InsightFace buffalo_l (primeira vez baixa ~200MB)...
+2026-03-23 01:01:48,790 [INFO] InsightFace pronto.
+2026-03-23 01:01:48,790 [INFO] Carregando alvos do banco...
+2026-03-23 01:01:53,110 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:01:53,110 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:01:53,111 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:01:53,111 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:01:53,111 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:01:53,111 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:01:53,111 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:01:53,111 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:01:53,112 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:01:53,112 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:01:53,112 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | sem mandado | 3 encoding(s)
+2026-03-23 01:01:53,112 [INFO] Total de alvos carregados: 1
+2026-03-23 01:01:53,210 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:01:53,438 [INFO] ESP32 configurado: VGA, qualidade alta
+2026-03-23 01:01:53,438 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:01:53,539 [INFO] Stream recebido!
+2026-03-23 01:01:53,539 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:02:27,535 [INFO] Encerrando sistema...
+2026-03-23 01:02:36,942 [INFO] Carregando InsightFace buffalo_l (primeira vez baixa ~200MB)...
+2026-03-23 01:02:37,759 [INFO] InsightFace pronto.
+2026-03-23 01:02:37,759 [INFO] Carregando alvos do banco...
+2026-03-23 01:02:40,840 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:02:40,840 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:02:40,840 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:02:40,840 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:02:40,840 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:02:40,841 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:02:40,841 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:02:40,841 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:02:40,841 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:02:40,841 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:02:40,841 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | sem mandado | 3 encoding(s)
+2026-03-23 01:02:40,841 [INFO] Total de alvos carregados: 1
+2026-03-23 01:02:40,947 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:02:41,154 [INFO] ESP32 configurado: VGA, qualidade alta
+2026-03-23 01:02:41,154 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:02:41,256 [INFO] Stream recebido!
+2026-03-23 01:02:41,256 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:03:04,761 [INFO] Encerrando sistema...
+2026-03-23 01:04:01,840 [INFO] Carregando InsightFace buffalo_l (primeira vez baixa ~200MB)...
+2026-03-23 01:04:02,649 [INFO] InsightFace pronto.
+2026-03-23 01:04:02,650 [INFO] Carregando alvos do banco...
+2026-03-23 01:04:05,779 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:04:05,779 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:04:05,779 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:04:05,779 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:04:05,779 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:04:05,780 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:04:05,780 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:04:05,780 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:04:05,780 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:04:05,780 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:04:05,780 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | sem mandado | 3 encoding(s)
+2026-03-23 01:04:05,781 [INFO] Total de alvos carregados: 1
+2026-03-23 01:04:05,885 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:04:06,111 [INFO] ESP32 configurado: VGA, qualidade alta
+2026-03-23 01:04:06,112 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:04:06,213 [INFO] Stream recebido!
+2026-03-23 01:04:06,213 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:09:06,143 [INFO] Recarregando banco em background...
+2026-03-23 01:09:06,176 [INFO] Carregando alvos do banco...
+2026-03-23 01:09:09,334 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:09:09,363 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:09:09,393 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:09:09,414 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:09:09,459 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:09:09,505 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:09:09,537 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:09:09,567 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:09:09,596 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:09:09,607 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:09:09,647 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | sem mandado | 3 encoding(s)
+2026-03-23 01:09:09,687 [INFO] Total de alvos carregados: 1
+2026-03-23 01:10:19,770 [INFO] Carregando InsightFace buffalo_l...
+2026-03-23 01:10:21,000 [INFO] InsightFace pronto.
+2026-03-23 01:10:21,000 [INFO] Carregando alvos do banco...
+2026-03-23 01:10:24,071 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:10:24,071 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:10:24,071 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:10:24,071 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:10:24,071 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:10:24,071 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:10:24,071 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:10:24,072 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:10:24,072 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:10:24,072 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:10:24,072 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 3 encoding(s)
+2026-03-23 01:10:24,072 [INFO] Total de alvos carregados: 1
+2026-03-23 01:10:24,172 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:10:24,371 [INFO] ESP32 configurado: VGA
+2026-03-23 01:10:24,372 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:10:24,473 [INFO] Stream recebido!
+2026-03-23 01:10:24,474 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:10:52,447 [INFO] Encerrando...
+2026-03-23 01:11:01,589 [INFO] Carregando InsightFace buffalo_l...
+2026-03-23 01:11:02,399 [INFO] InsightFace pronto.
+2026-03-23 01:11:02,399 [INFO] Carregando alvos do banco...
+2026-03-23 01:11:05,474 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:11:05,475 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:11:05,476 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:11:05,476 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:11:05,476 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 3 encoding(s)
+2026-03-23 01:11:05,476 [INFO] Total de alvos carregados: 1
+2026-03-23 01:11:05,592 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:11:05,815 [INFO] ESP32 configurado: VGA
+2026-03-23 01:11:05,816 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:11:05,917 [INFO] Stream recebido!
+2026-03-23 01:11:05,918 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:13:28,135 [INFO] Carregando InsightFace buffalo_l...
+2026-03-23 01:13:28,998 [INFO] InsightFace pronto.
+2026-03-23 01:13:28,998 [INFO] Carregando alvos do banco...
+2026-03-23 01:13:33,148 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:13:33,149 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:13:33,149 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:13:33,149 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:13:33,149 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:13:33,149 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:13:33,149 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:13:33,150 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:13:33,150 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:13:33,150 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:13:33,150 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 3 encoding(s)
+2026-03-23 01:13:33,150 [INFO] Total de alvos carregados: 1
+2026-03-23 01:13:33,273 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:13:33,471 [INFO] ESP32 configurado: VGA
+2026-03-23 01:13:33,471 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:13:33,572 [INFO] Stream recebido!
+2026-03-23 01:13:33,573 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:14:24,186 [INFO] Encerrando...
+2026-03-23 01:16:54,169 [INFO] Carregando InsightFace buffalo_l...
+2026-03-23 01:16:54,987 [INFO] InsightFace pronto.
+2026-03-23 01:16:54,988 [INFO] Carregando alvos do banco...
+2026-03-23 01:16:58,058 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 01:16:58,058 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 01:16:58,058 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 01:16:58,058 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 01:16:58,059 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 3 encoding(s)
+2026-03-23 01:16:58,060 [INFO] Total de alvos carregados: 1
+2026-03-23 01:16:58,158 [INFO] MQTT conectado em crossover.proxy.rlwy.net:11670
+2026-03-23 01:16:58,492 [INFO] ESP32 configurado: VGA
+2026-03-23 01:16:58,492 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 01:16:58,573 [INFO] Usando VideoCapture.
+2026-03-23 01:16:58,593 [INFO] Stream recebido!
+2026-03-23 01:16:58,593 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 01:17:24,737 [INFO] Suspeito capturado: suspeitos_detectados\SUSPEITO_20260323_011724.jpg
+2026-03-23 01:17:30,426 [INFO] ALVO: PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 67% | Medo
+2026-03-23 01:17:30,430 [INFO] MQTT publicado: PEDRO LUCAS ARAUJO DE LIMA SANTOS
+2026-03-23 01:17:33,889 [INFO] Deteccao registrada: PEDRO LUCAS ARAUJO DE LIMA SANTOS
+2026-03-23 01:17:45,434 [INFO] ALVO: PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 68% | Triste
+2026-03-23 01:17:45,439 [INFO] MQTT publicado: PEDRO LUCAS ARAUJO DE LIMA SANTOS
+2026-03-23 01:17:48,941 [INFO] Deteccao registrada: PEDRO LUCAS ARAUJO DE LIMA SANTOS
+2026-03-23 01:18:09,473 [INFO] ALVO: PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 67% | Triste
+2026-03-23 01:18:09,478 [INFO] MQTT publicado: PEDRO LUCAS ARAUJO DE LIMA SANTOS
+2026-03-23 01:18:12,944 [INFO] Deteccao registrada: PEDRO LUCAS ARAUJO DE LIMA SANTOS
+2026-03-23 01:18:19,752 [INFO] Encerrando...
+2026-03-23 21:40:54,493 [INFO] Carregando InsightFace buffalo_l...
+2026-03-23 21:40:55,537 [INFO] InsightFace pronto.
+2026-03-23 21:40:55,538 [INFO] Carregando alvos do banco...
+2026-03-23 21:40:59,368 [WARNING] JOAO SILVA — encoding vazio, pulando.
+2026-03-23 21:40:59,368 [WARNING] MARIA SOUZA — encoding vazio, pulando.
+2026-03-23 21:40:59,369 [WARNING] CARLOS ALBERTO MENDES SILVA — encoding vazio, pulando.
+2026-03-23 21:40:59,369 [WARNING] RODRIGO FERREIRA SANTOS — encoding vazio, pulando.
+2026-03-23 21:40:59,369 [WARNING] MARCOS PAULO OLIVEIRA LIMA — encoding vazio, pulando.
+2026-03-23 21:40:59,369 [WARNING] ANA LUCIA BARBOSA COSTA — encoding vazio, pulando.
+2026-03-23 21:40:59,369 [WARNING] JOSIVALDO PEREIRA NASCIMENTO — encoding vazio, pulando.
+2026-03-23 21:40:59,369 [WARNING] WELLINGTON SOUZA ARAUJO — encoding vazio, pulando.
+2026-03-23 21:40:59,370 [WARNING] FABIO HENRIQUE MELO TORRES — encoding vazio, pulando.
+2026-03-23 21:40:59,370 [WARNING] PAULO ROBERTO CAVALCANTE — encoding vazio, pulando.
+2026-03-23 21:40:59,370 [INFO]   PEDRO LUCAS ARAUJO DE LIMA SANTOS | ALTO | 3 encoding(s)
+2026-03-23 21:40:59,370 [INFO] Total de alvos carregados: 1
+2026-03-23 21:40:59,488 [INFO] MQTT conectado em crossover.proxy.rlwy.net:28372
+2026-03-23 21:40:59,838 [INFO] ESP32 configurado: VGA
+2026-03-23 21:40:59,838 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-03-23 21:41:00,167 [INFO] Usando VideoCapture.
+2026-03-23 21:41:00,241 [INFO] Stream recebido!
+2026-03-23 21:41:00,242 [INFO] Sistema ativo! Pressione Q para sair.
+2026-03-23 21:41:18,294 [INFO] Suspeito capturado: suspeitos_detectados\SUSPEITO_20260323_214118.jpg
+2026-03-23 21:41:27,623 [INFO] Encerrando...
