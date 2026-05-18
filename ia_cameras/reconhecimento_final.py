@@ -20,6 +20,9 @@ from dotenv import load_dotenv
 from insightface.app import FaceAnalysis
 from deepface import DeepFace
 
+# >>> INTEGRAÇÃO API — importa o cliente HTTP
+from api_client import ApiClient
+
 load_dotenv()
 
 # ==============================================================================
@@ -75,7 +78,7 @@ def inicializar_modelos():
     global insight_app
     log.info("Carregando InsightFace buffalo_l...")
     insight_app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
-    insight_app.prepare(ctx_id=0, det_size=(320, 320))  # 320 = leve para CPU
+    insight_app.prepare(ctx_id=0, det_size=(320, 320))
     log.info("InsightFace pronto.")
 
 # ==============================================================================
@@ -90,9 +93,11 @@ cache_emocao             = {}
 inicio_deteccao_suspeito = 0.0
 ultimo_print_suspeito    = 0.0
 
-# Resultado da IA (atualizado pela thread de IA, lido pelo display)
 ultimo_resultado         = []
 lock_resultado           = threading.Lock()
+
+# >>> INTEGRAÇÃO API — instância global (lê API_URL do .env automaticamente)
+api = ApiClient()
 
 # ==============================================================================
 #  BANCO DE DADOS
@@ -464,7 +469,7 @@ class VideoStream:
         self.stopped = True
 
 # ==============================================================================
-#  THREAD DA IA — roda InsightFace em paralelo com o display
+#  THREAD DA IA
 # ==============================================================================
 def configurar_esp32():
     try:
@@ -541,6 +546,20 @@ class ThreadIA:
                             threading.Thread(target=alerta_sonoro, args=(dados_alvo["perigo"], len(dados_alvo["mandados"]) > 0), daemon=True).start()
                             publicar_alerta_mqtt(dados_alvo, confianca, is_vivo, emocao, foto)
                             registrar_deteccao(dados_alvo["id"], nome, confianca, is_vivo, foto)
+
+                            # >>> INTEGRAÇÃO API — envia detecção e alerta ao backend
+                            api.enviar_deteccao(
+                                nome         = nome,
+                                similaridade = confianca,
+                                nivel_perigo = dados_alvo["perigo"],
+                                emocao       = emocao,
+                                anti_spoofing= not spoofing,
+                                prova_de_vida= is_vivo,
+                            )
+                            if dados_alvo["perigo"] in ("CRITICO", "ALTO"):
+                                api.enviar_alerta(nome, dados_alvo["perigo"])
+                            # <<< FIM INTEGRAÇÃO API
+
                     elif not dados_alvo:
                         tem_desc = True
 
@@ -602,9 +621,10 @@ def main():
 
     log.info("Sistema ativo! Pressione Q para sair.")
 
-    frame_count = 0
-    t_fps       = time.time()
-    fps         = 0.0
+    frame_count    = 0
+    t_fps          = time.time()
+    fps            = 0.0
+    t_heartbeat    = time.time()  # >>> INTEGRAÇÃO API
 
     while True:
         frame = camera.read()
@@ -627,6 +647,12 @@ def main():
         # Envia para thread IA a cada 3 frames
         if frame_count % 3 == 0:
             ia.enviar_frame(frame)
+
+        # >>> INTEGRAÇÃO API — heartbeat a cada 30 segundos
+        if time.time() - t_heartbeat >= 30:
+            api.enviar_heartbeat()
+            t_heartbeat = time.time()
+        # <<< FIM INTEGRAÇÃO API
 
         # Desenha resultados do último processamento
         with lock_resultado:

@@ -9,3 +9,7 @@ __pycache__/
 # Ignorar o banco de dados local (Opcional, mas recomendado para privacidade)
 banco_faces/
 encodings.pickle
+
+# Credenciais e variáveis de ambiente
+.env
+*.env
