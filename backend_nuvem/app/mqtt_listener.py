@@ -11,6 +11,8 @@ from app.models import Pessoa
 MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "reconhecimento/facial")
+MQTT_USERNAME = os.getenv("MQTT_USERNAME", "admin")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "public")
 
 
 def salvar_pessoa(payload: dict[str, Any]) -> None:
@@ -63,9 +65,14 @@ def iniciar_mqtt_listener() -> None:
         return
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+
+    if MQTT_USERNAME and MQTT_PASSWORD:
+        client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+
     client.on_connect = on_connect
     client.on_message = on_message
 
+    print(f"[MQTT] Tentando conectar em {MQTT_BROKER_HOST}:{MQTT_BROKER_PORT}")
     client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, 60)
     client.loop_forever()
 
