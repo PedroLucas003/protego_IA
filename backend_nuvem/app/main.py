@@ -12,8 +12,11 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Protego IA API")
 
-# Inicia o listener MQTT em background junto com a API
-iniciar_mqtt_em_thread()
+
+@app.on_event("startup")
+def startup_event():
+    print("[API] Iniciando listener MQTT...", flush=True)
+    iniciar_mqtt_em_thread()
 
 
 @app.get("/health")
