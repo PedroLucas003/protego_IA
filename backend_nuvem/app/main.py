@@ -6,10 +6,14 @@ from sqlalchemy.orm import Session
 from app.database import Base, engine, get_db
 from app.models import Pessoa, MqttEvento
 from app.schemas import PessoaResponse, MqttEventoResponse, MqttIngestRequest
+from app.mqtt_listener import iniciar_mqtt_em_thread
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Protego IA API")
+
+# Inicia o listener MQTT em background junto com a API
+iniciar_mqtt_em_thread()
 
 
 @app.get("/health")
