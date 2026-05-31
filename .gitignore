@@ -13,3 +13,12 @@ encodings.pickle
 # Credenciais e variáveis de ambiente
 .env
 *.env
+
+@"
+# PlatformIO build
+.pio/
+.vscode/
+
+# Dependências
+.penv/
+"@ | Out-File -FilePath firmware\.gitignore -Encoding utf8

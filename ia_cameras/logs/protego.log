@@ -223,3 +223,29 @@ LINE 3:                 p.id, p.nome_completo, p.cpf, p.rg,
 2026-03-23 21:41:00,242 [INFO] Sistema ativo! Pressione Q para sair.
 2026-03-23 21:41:18,294 [INFO] Suspeito capturado: suspeitos_detectados\SUSPEITO_20260323_214118.jpg
 2026-03-23 21:41:27,623 [INFO] Encerrando...
+2026-05-31 15:59:46,556 [INFO] Carregando InsightFace buffalo_l...
+2026-05-31 15:59:47,459 [INFO] InsightFace pronto.
+2026-05-31 15:59:47,460 [INFO] Carregando alvos do banco...
+2026-05-31 15:59:49,555 [ERROR] Erro ao carregar alvos: connection to server at "crossover.proxy.rlwy.net" (66.33.22.252), port 11343 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+2026-05-31 15:59:50,147 [INFO] MQTT conectado em crossover.proxy.rlwy.net:28372
+2026-05-31 15:59:52,156 [WARNING] Nao foi possivel configurar ESP32
+2026-05-31 15:59:52,157 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-05-31 16:00:00,186 [ERROR] Sem frames da camera: http://192.168.1.91:81/stream
+2026-05-31 16:04:42,016 [INFO] Carregando InsightFace buffalo_l...
+2026-05-31 16:04:42,823 [INFO] InsightFace pronto.
+2026-05-31 16:04:42,823 [INFO] Carregando alvos do banco...
+2026-05-31 16:04:43,048 [ERROR] Erro ao carregar alvos: connection to server at "crossover.proxy.rlwy.net" (66.33.22.252), port 11343 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+2026-05-31 16:04:43,150 [INFO] MQTT conectado em crossover.proxy.rlwy.net:28372
+2026-05-31 16:04:43,437 [INFO] ESP32 configurado: VGA
+2026-05-31 16:04:43,438 [INFO] Conectando: http://192.168.1.91:81/stream...
+2026-05-31 16:04:43,709 [INFO] Usando VideoCapture.
+2026-05-31 16:04:43,739 [INFO] Stream recebido!
+2026-05-31 16:04:43,740 [INFO] Sistema ativo! Pressione Q para sair.
+2026-05-31 16:05:15,852 [INFO] Suspeito capturado: suspeitos_detectados\SUSPEITO_20260531_160515.jpg
+2026-05-31 16:05:45,118 [INFO] Encerrando...
