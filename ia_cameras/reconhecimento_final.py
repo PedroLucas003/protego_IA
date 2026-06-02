@@ -215,7 +215,7 @@ def registrar_deteccao(pessoa_id, nome, confianca, prova_de_vida, foto_url=""):
 # ==============================================================================
 #  MQTT
 # ==============================================================================
-mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="protego_ia_01")
 
 def conectar_mqtt():
     try:
