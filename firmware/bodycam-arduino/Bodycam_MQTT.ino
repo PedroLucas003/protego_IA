@@ -9,7 +9,7 @@ const char *password = "03072003";
 
 const char* mqtt_broker    = "kodama.proxy.rlwy.net";
 const int   mqtt_port      = 38909;
-const char* mqtt_client_id = "Bodycam_01";
+const char* mqtt_client_id = "esp32_cam_01";
 
 const char* TOPIC_STATUS   = "policia/cam01/status";
 const char* TOPIC_COMANDOS = "policia/cam01/comandos";
@@ -112,7 +112,7 @@ void reconnectMQTT() {
   int tentativas = 0;
   while (!mqttClient.connected() && tentativas < 5) {
     Serial.printf("🔄 Conectando MQTT em %s:%d (mTLS)...\n", mqtt_broker, mqtt_port);
-    if (mqttClient.connect(mqtt_client_id)) {
+    if (mqttClient.connect(mqtt_client_id, "esp32_cam_01", "")) {
       Serial.println("✅ MQTT conectado com mTLS!");
       mqttClient.publish(TOPIC_STATUS, "{\"status\": \"ONLINE\", \"tls\": \"mTLS\"}");
       mqttClient.subscribe(TOPIC_COMANDOS);
