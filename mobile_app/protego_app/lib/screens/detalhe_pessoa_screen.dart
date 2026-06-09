@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/alerta.dart';
-import '../models/deteccao.dart';
 import '../models/pessoa_identificada.dart';
 import '../providers/monitor_provider.dart';
-import '../utils/face_image.dart';
 import '../widgets/perigo_badge.dart';
 import '../widgets/status_chip.dart';
 
@@ -17,27 +15,31 @@ class DetalhePessoaScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Identificação'),
+        title: const Text('Suspeito'),
         backgroundColor: const Color(0xFF1A237E),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          FaceImage.build(
-            frameB64: pessoa.frameB64,
-            fotoUrl: pessoa.fotoUrl,
-            height: 220,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            pessoa.nome,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pessoa.nome,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  PerigoBadge(nivel: pessoa.nivelPerigo),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 8),
-          PerigoBadge(nivel: pessoa.nivelPerigo),
-          const SizedBox(height: 16),
           _infoTile(Icons.badge, 'CPF', pessoa.cpf),
           _infoTile(Icons.credit_card, 'RG', pessoa.rg),
           _infoTile(Icons.flag, 'Status', pessoa.status),
@@ -135,21 +137,25 @@ class DetalheAlertaScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          FaceImage.build(
-            frameB64: a.frameB64,
-            fotoUrl: a.fotoUrl,
-            height: 240,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            a.nome,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    a.nome,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  PerigoBadge(nivel: a.nivelPerigo),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 8),
-          PerigoBadge(nivel: a.nivelPerigo),
-          const SizedBox(height: 16),
           _infoTile(Icons.message, 'Mensagem', a.mensagem ?? 'Alerta de reconhecimento'),
           _infoTile(Icons.videocam, 'Câmera', a.deviceId),
           _infoTile(Icons.access_time, 'Horário', a.timestamp),
@@ -218,72 +224,6 @@ class DetalheAlertaScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(conteudo),
-        ],
-      ),
-    );
-  }
-}
-
-class DetalheDeteccaoScreen extends StatelessWidget {
-  final Deteccao deteccao;
-
-  const DetalheDeteccaoScreen({super.key, required this.deteccao});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(deteccao.nome),
-        backgroundColor: const Color(0xFF1A237E),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          FaceImage.build(
-            frameB64: deteccao.frameB64,
-            fotoUrl: deteccao.fotoUrl,
-            height: 260,
-          ),
-          const SizedBox(height: 16),
-          PerigoBadge(nivel: deteccao.nivelPerigo),
-          const SizedBox(height: 12),
-          ListTile(
-            title: const Text('Similaridade'),
-            trailing: Text(
-              '${deteccao.similaridadePercent.toStringAsFixed(1)}%',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          ListTile(
-            title: const Text('Câmera'),
-            trailing: Text(deteccao.deviceId),
-          ),
-          ListTile(
-            title: const Text('Horário'),
-            trailing: Text(deteccao.timestamp),
-          ),
-          if (deteccao.emocao != null)
-            ListTile(
-              title: const Text('Emoção'),
-              trailing: Text(deteccao.emocao!),
-            ),
-          Wrap(
-            spacing: 8,
-            children: [
-              StatusChip(
-                label: 'Anti-spoofing',
-                icon: Icons.security,
-                color: Colors.blue,
-                ativo: deteccao.antiSpoofing,
-              ),
-              StatusChip(
-                label: 'Prova de vida',
-                icon: Icons.visibility,
-                color: Colors.green,
-                ativo: deteccao.provaDeVida,
-              ),
-            ],
-          ),
         ],
       ),
     );

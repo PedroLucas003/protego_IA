@@ -7,8 +7,6 @@ class Alerta {
   final String nome;
   final String nivelPerigo;
   final String? mensagem;
-  final String? fotoUrl;
-  final String? frameB64;
   final String? cpf;
   final double? confianca;
   final String? emocao;
@@ -26,8 +24,6 @@ class Alerta {
     required this.nome,
     required this.nivelPerigo,
     this.mensagem,
-    this.fotoUrl,
-    this.frameB64,
     this.cpf,
     this.confianca,
     this.emocao,
@@ -47,8 +43,6 @@ class Alerta {
       nome: json['nome'] as String? ?? '',
       nivelPerigo: (json['nivel_perigo'] as String? ?? 'ALTO').toUpperCase(),
       mensagem: json['mensagem'] as String?,
-      fotoUrl: json['foto_url'] as String?,
-      frameB64: json['frame_b64'] as String?,
       cpf: json['cpf'] as String?,
       confianca: (json['confianca'] as num?)?.toDouble(),
       emocao: json['emocao'] as String?,
@@ -86,8 +80,6 @@ class Alerta {
       'prova_de_vida': true,
       'tem_mandado': temMandado ?? false,
       'emocao': emocao,
-      'foto_url': fotoUrl,
-      'frame_b64': frameB64,
     });
   }
 }

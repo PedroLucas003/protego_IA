@@ -4,7 +4,6 @@ import '../config/app_config.dart';
 import '../models/alerta.dart';
 import '../models/camera_device.dart';
 import '../models/deteccao.dart';
-import '../models/mqtt_evento.dart';
 import '../models/pessoa_identificada.dart';
 
 class ApiService {
@@ -78,20 +77,6 @@ class ApiService {
     return PessoaIdentificada.fromJson(
       jsonDecode(r.body) as Map<String, dynamic>,
     );
-  }
-
-  Future<List<MqttEvento>> listarMqttEventos() async {
-    final r = await http
-        .get(Uri.parse('$_baseUrl/mqtt-eventos'))
-        .timeout(const Duration(seconds: 15));
-    if (r.statusCode != 200) {
-      return [];
-    }
-    final list = jsonDecode(r.body) as List<dynamic>;
-    return list
-        .map((e) => MqttEvento.fromJson(e as Map<String, dynamic>))
-        .toList()
-      ..sort((a, b) => b.id.compareTo(a.id));
   }
 
   Future<List<CameraDevice>> listarCameras() async {

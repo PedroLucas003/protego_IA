@@ -8,8 +8,6 @@ class Deteccao {
   final String? emocao;
   final bool antiSpoofing;
   final bool provaDeVida;
-  final String? frameB64;
-  final String? fotoUrl;
 
   Deteccao({
     required this.id,
@@ -21,8 +19,6 @@ class Deteccao {
     this.emocao,
     required this.antiSpoofing,
     required this.provaDeVida,
-    this.frameB64,
-    this.fotoUrl,
   });
 
   factory Deteccao.fromJson(Map<String, dynamic> json) {
@@ -36,14 +32,9 @@ class Deteccao {
       emocao: json['emocao'] as String?,
       antiSpoofing: json['anti_spoofing'] as bool? ?? false,
       provaDeVida: json['prova_de_vida'] as bool? ?? false,
-      frameB64: json['frame_b64'] as String?,
-      fotoUrl: json['foto_url'] as String?,
     );
   }
 
-  String? get imagemRosto => frameB64 ?? fotoUrl;
-
-  /// Similaridade pode vir como 0.95 ou 95.0 conforme origem.
   double get similaridadePercent {
     if (similaridade <= 1) return similaridade * 100;
     return similaridade;

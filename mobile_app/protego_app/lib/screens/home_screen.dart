@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/alerta.dart';
 import '../models/camera_device.dart';
-import '../models/deteccao.dart';
 import '../models/pessoa_identificada.dart';
 import '../providers/monitor_provider.dart';
-import '../services/mqtt_service.dart';
-import '../utils/face_image.dart';
 import '../utils/perigo_theme.dart';
-import '../widgets/perigo_badge.dart';
+import '../widgets/registro_card.dart';
+import 'camera_monitor_screen.dart';
 import 'detalhe_pessoa_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,12 +19,31 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _tabIndex = 0;
 
+  static const _tabs = [
+    _TabInfo(label: 'Suspeitos', icon: Icons.person_search),
+    _TabInfo(label: 'Câmeras', icon: Icons.videocam),
+    _TabInfo(label: 'Alertas', icon: Icons.notifications_active),
+  ];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MonitorProvider>().iniciar();
     });
+  }
+
+  int _contagemTab(MonitorProvider m, int i) {
+    switch (i) {
+      case 0:
+        return m.pessoas.length;
+      case 1:
+        return m.camerasOnline;
+      case 2:
+        return m.alertas.length;
+      default:
+        return 0;
+    }
   }
 
   @override
@@ -38,13 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
             title: const Text('Protego IA'),
             backgroundColor: const Color(0xFF1A237E),
             actions: [
-              _StatusIndicator(
-                apiOnline: monitor.apiOnline,
-                mqttState: monitor.mqttState,
-                mqttErro: monitor.mqttErro,
-              ),
+              _StatusIndicator(apiOnline: monitor.apiOnline),
               IconButton(
                 icon: const Icon(Icons.refresh),
+                tooltip: 'Atualizar',
                 onPressed: () => monitor.refresh(),
               ),
             ],
@@ -53,25 +67,26 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _ResumoBar(monitor: monitor),
               if (monitor.erro != null)
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(
-                    monitor.erro!,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                    textAlign: TextAlign.center,
+                Material(
+                  color: Colors.red.shade900.withValues(alpha: 0.35),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Text(
+                      monitor.erro!,
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              _FeedAoVivo(monitor: monitor),
               Expanded(
-                child: monitor.carregando && monitor.deteccoes.isEmpty
+                child: monitor.carregando && monitor.pessoas.isEmpty && monitor.alertas.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : IndexedStack(
                         index: _tabIndex,
                         children: [
-                          _ListaAlertas(alertas: monitor.alertas),
-                          _ListaDeteccoes(deteccoes: monitor.deteccoes),
-                          _ListaPessoas(pessoas: monitor.pessoas),
+                          _ListaSuspeitos(pessoas: monitor.pessoas),
                           _ListaCameras(cameras: monitor.cameras),
+                          _ListaAlertas(alertas: monitor.alertas),
                         ],
                       ),
               ),
@@ -79,41 +94,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _tabIndex,
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            height: 64,
             onDestinationSelected: (i) => setState(() => _tabIndex = i),
-            destinations: [
-              NavigationDestination(
+            destinations: List.generate(_tabs.length, (i) {
+              final tab = _tabs[i];
+              final count = _contagemTab(monitor, i);
+              return NavigationDestination(
                 icon: Badge(
-                  label: Text('${monitor.alertas.length}'),
-                  isLabelVisible: monitor.alertas.isNotEmpty,
-                  child: const Icon(Icons.notifications_active),
+                  isLabelVisible: count > 0,
+                  label: Text('$count'),
+                  child: Icon(tab.icon),
                 ),
-                label: 'Alertas',
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  label: Text('${monitor.deteccoes.length}'),
-                  isLabelVisible: monitor.deteccoes.isNotEmpty,
-                  child: const Icon(Icons.face_retouching_natural),
-                ),
-                label: 'Detecções',
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  label: Text('${monitor.pessoas.length}'),
-                  isLabelVisible: monitor.pessoas.isNotEmpty,
-                  child: const Icon(Icons.person_search),
-                ),
-                label: 'Identificados',
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  label: Text('${monitor.camerasOnline}'),
-                  isLabelVisible: monitor.cameras.isNotEmpty,
-                  child: const Icon(Icons.videocam),
-                ),
-                label: 'Câmeras',
-              ),
-            ],
+                label: tab.label,
+              );
+            }),
           ),
         );
       },
@@ -121,198 +116,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _FeedAoVivo extends StatelessWidget {
-  final MonitorProvider monitor;
+class _TabInfo {
+  final String label;
+  final IconData icon;
 
-  const _FeedAoVivo({required this.monitor});
-
-  @override
-  Widget build(BuildContext context) {
-    final itens = <dynamic>[
-      ...monitor.deteccoes.take(8),
-      ...monitor.pessoas.take(8),
-    ];
-    if (itens.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      height: 110,
-      color: const Color(0xFF1E2A3A),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: Row(
-              children: [
-                Icon(Icons.sensors, size: 14, color: Colors.lightGreenAccent),
-                SizedBox(width: 6),
-                Text(
-                  'Feed das câmeras',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              itemCount: itens.length.clamp(0, 12),
-              itemBuilder: (context, i) {
-                final item = itens[i];
-                if (item is Deteccao) {
-                  return _FeedCard(
-                    nome: item.nome,
-                    subtitulo: item.deviceId,
-                    frameB64: item.frameB64,
-                    fotoUrl: item.fotoUrl,
-                    cor: PerigoTheme.corNivel(item.nivelPerigo),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetalheDeteccaoScreen(deteccao: item),
-                      ),
-                    ),
-                  );
-                }
-                final p = item as PessoaIdentificada;
-                return _FeedCard(
-                  nome: p.nome,
-                  subtitulo: p.status,
-                  frameB64: p.frameB64,
-                  fotoUrl: p.fotoUrl,
-                  cor: PerigoTheme.corNivel(p.nivelPerigo),
-                  onTap: () => _abrirPessoa(context, p),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _abrirPessoa(BuildContext context, PessoaIdentificada p) async {
-    final monitor = context.read<MonitorProvider>();
-    final completa = await monitor.buscarPessoaCompleta(p);
-    if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DetalhePessoaScreen(pessoa: completa ?? p),
-      ),
-    );
-  }
-}
-
-class _FeedCard extends StatelessWidget {
-  final String nome;
-  final String subtitulo;
-  final String? frameB64;
-  final String? fotoUrl;
-  final Color cor;
-  final VoidCallback onTap;
-
-  const _FeedCard({
-    required this.nome,
-    required this.subtitulo,
-    this.frameB64,
-    this.fotoUrl,
-    required this.cor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 80,
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: cor, width: 2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: FaceImage.build(
-                    frameB64: frameB64,
-                    fotoUrl: fotoUrl,
-                    height: 56,
-                    width: 56,
-                    fit: BoxFit.cover,
-                    placeholder: Container(
-                      color: Colors.grey.shade800,
-                      child: Icon(Icons.face, color: cor, size: 28),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              nome,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10, color: Colors.white),
-            ),
-            Text(
-              subtitulo,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 9, color: Colors.white54),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  const _TabInfo({required this.label, required this.icon});
 }
 
 class _StatusIndicator extends StatelessWidget {
   final bool apiOnline;
-  final ProtegoMqttState mqttState;
-  final String? mqttErro;
 
-  const _StatusIndicator({
-    required this.apiOnline,
-    required this.mqttState,
-    this.mqttErro,
-  });
+  const _StatusIndicator({required this.apiOnline});
 
   @override
   Widget build(BuildContext context) {
-    final mqttOk = mqttState == ProtegoMqttState.connected;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: Row(
-        children: [
-          Tooltip(
-            message: apiOnline ? 'API Railway online' : 'API offline',
-            child: Icon(
-              Icons.cloud,
-              color: apiOnline ? Colors.lightGreenAccent : Colors.redAccent,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Tooltip(
-            message: mqttOk
-                ? 'MQTT mTLS conectado (kodama)'
-                : mqttErro ?? 'MQTT: $mqttState',
-            child: Icon(
-              Icons.wifi_tethering,
-              color: mqttOk ? Colors.lightGreenAccent : Colors.orangeAccent,
-              size: 20,
-            ),
-          ),
-        ],
+      child: Tooltip(
+        message: apiOnline ? 'API Railway online' : 'API offline',
+        child: Icon(
+          Icons.cloud,
+          color: apiOnline ? Colors.lightGreenAccent : Colors.redAccent,
+          size: 22,
+        ),
       ),
     );
   }
@@ -331,15 +157,20 @@ class _ResumoBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: const Color(0xFF283593),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '${monitor.totalAlertasCriticos} críticos • ${monitor.camerasOnline}/${monitor.cameras.length} câmeras',
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          Expanded(
+            child: Text(
+              '${monitor.totalAlertasCriticos} críticos • '
+              '${monitor.camerasOnline}/${monitor.cameras.length} câmeras',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
+          const SizedBox(width: 8),
           Text(
             atualizado != null
-                ? 'Atualizado ${_formatHora(atualizado)}'
+                ? _formatHora(atualizado)
                 : 'Aguardando...',
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
@@ -365,33 +196,29 @@ class _ListaAlertas extends StatelessWidget {
     if (alertas.isEmpty) {
       return const _EmptyState(
         icon: Icons.notifications_off,
-        texto: 'Nenhum alerta no momento.',
+        texto: 'Nenhum alerta no banco.',
       );
     }
     return RefreshIndicator(
       onRefresh: () => context.read<MonitorProvider>().refresh(),
       child: ListView.builder(
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
         itemCount: alertas.length,
         itemBuilder: (context, i) {
           final a = context.read<MonitorProvider>().enriquecerAlerta(alertas[i]);
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: ListTile(
-              leading: FaceImage.thumbnail(
-                frameB64: a.frameB64,
-                fotoUrl: a.fotoUrl,
-                fallbackIcon: Icons.warning_amber_rounded,
-                fallbackColor: PerigoTheme.corNivel(a.nivelPerigo),
-              ),
-              title: Text(a.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('${a.deviceId} • ${a.mensagem ?? a.timestamp}'),
-              trailing: PerigoBadge(nivel: a.nivelPerigo),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DetalheAlertaScreen(alerta: a),
-                ),
-              ),
+          return RegistroCard(
+            leading: Icon(
+              Icons.warning_amber_rounded,
+              color: PerigoTheme.corNivel(a.nivelPerigo),
+              size: 32,
+            ),
+            titulo: a.nome,
+            subtitulo: a.mensagem ?? 'Alerta de reconhecimento',
+            detalhe: '${a.deviceId} • ${a.timestamp}',
+            nivelPerigo: a.nivelPerigo,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => DetalheAlertaScreen(alerta: a)),
             ),
           );
         },
@@ -400,101 +227,62 @@ class _ListaAlertas extends StatelessWidget {
   }
 }
 
-class _ListaDeteccoes extends StatelessWidget {
-  final List<Deteccao> deteccoes;
-
-  const _ListaDeteccoes({required this.deteccoes});
-
-  @override
-  Widget build(BuildContext context) {
-    if (deteccoes.isEmpty) {
-      return const _EmptyState(
-        icon: Icons.videocam_off,
-        texto: 'Nenhuma detecção registrada.',
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: () => context.read<MonitorProvider>().refresh(),
-      child: ListView.builder(
-        itemCount: deteccoes.length,
-        itemBuilder: (context, i) {
-          final d = deteccoes[i];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: ListTile(
-              leading: d.imagemRosto != null
-                  ? FaceImage.thumbnail(
-                      frameB64: d.frameB64,
-                      fotoUrl: d.fotoUrl,
-                      fallbackColor: PerigoTheme.corNivel(d.nivelPerigo),
-                    )
-                  : CircleAvatar(
-                      backgroundColor: PerigoTheme.corNivel(d.nivelPerigo),
-                      child: Text(
-                        '${d.similaridadePercent.toStringAsFixed(0)}%',
-                        style: const TextStyle(fontSize: 10, color: Colors.white),
-                      ),
-                    ),
-              title: Text(d.nome),
-              subtitle: Text('${d.deviceId} • ${d.timestamp}'),
-              trailing: PerigoBadge(nivel: d.nivelPerigo),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DetalheDeteccaoScreen(deteccao: d),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ListaPessoas extends StatelessWidget {
+class _ListaSuspeitos extends StatelessWidget {
   final List<PessoaIdentificada> pessoas;
 
-  const _ListaPessoas({required this.pessoas});
+  const _ListaSuspeitos({required this.pessoas});
 
   @override
   Widget build(BuildContext context) {
     if (pessoas.isEmpty) {
       return const _EmptyState(
         icon: Icons.person_off,
-        texto: 'Aguardando reconhecimento facial...',
+        texto: 'Nenhum suspeito cadastrado no banco.',
       );
     }
     return RefreshIndicator(
       onRefresh: () => context.read<MonitorProvider>().refresh(),
       child: ListView.builder(
-        itemCount: pessoas.length,
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
+        itemCount: pessoas.length + 1,
         itemBuilder: (context, i) {
-          final p = pessoas[i];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: ListTile(
-              leading: FaceImage.thumbnail(
-                frameB64: p.frameB64,
-                fotoUrl: p.fotoUrl,
-                fallbackIcon: p.temMandado ? Icons.gavel : Icons.person,
-                fallbackColor: p.temMandado ? Colors.red : Colors.blueGrey,
+          if (i == 0) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Text(
+                'Alvos cadastrados no sistema (${pessoas.length})',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
               ),
-              title: Text(p.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('${p.cpf} • ${p.status}'),
-              trailing: PerigoBadge(nivel: p.nivelPerigo),
-              onTap: () async {
-                final monitor = context.read<MonitorProvider>();
-                final completa = await monitor.buscarPessoaCompleta(p);
-                if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DetalhePessoaScreen(pessoa: completa ?? p),
-                  ),
-                );
-              },
+            );
+          }
+          final p = pessoas[i - 1];
+          return RegistroCard(
+            leading: Icon(
+              p.temMandado ? Icons.gavel : Icons.person,
+              color: p.temMandado ? Colors.redAccent : Colors.blueGrey.shade300,
+              size: 32,
             ),
+            titulo: p.nome,
+            subtitulo: p.status.isNotEmpty ? p.status : 'Cadastrado',
+            detalhe: [
+              if (p.cpf.isNotEmpty) 'CPF ${p.cpf}',
+              if (p.nivelPerigo.isNotEmpty) p.nivelPerigo,
+            ].join(' • '),
+            nivelPerigo: p.nivelPerigo,
+            extra: p.temMandado
+                ? _chipStatus('Mandado', Colors.redAccent)
+                : null,
+            onTap: () async {
+              final monitor = context.read<MonitorProvider>();
+              final completa = await monitor.buscarPessoaCompleta(p);
+              if (!context.mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DetalhePessoaScreen(pessoa: completa ?? p),
+                ),
+              );
+            },
           );
         },
       ),
@@ -518,32 +306,35 @@ class _ListaCameras extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () => context.read<MonitorProvider>().refresh(),
       child: ListView.builder(
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
         itemCount: cameras.length,
         itemBuilder: (context, i) {
           final c = cameras[i];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: c.online ? Colors.green.shade800 : Colors.grey.shade700,
-                child: Icon(
-                  c.online ? Icons.videocam : Icons.videocam_off,
-                  color: Colors.white,
-                ),
+          return RegistroCard(
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: c.online ? Colors.green.shade800 : Colors.grey.shade700,
+              child: Icon(
+                c.online ? Icons.videocam : Icons.videocam_off,
+                color: Colors.white,
+                size: 20,
               ),
-              title: Text(c.deviceId, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                c.ultimoHeartbeat != null
-                    ? 'Último sinal: ${_formatTs(c.ultimoHeartbeat!)}'
-                    : 'Sem heartbeat',
-              ),
-              trailing: Chip(
-                label: Text(
-                  c.online ? 'ONLINE' : 'OFFLINE',
-                  style: const TextStyle(fontSize: 11, color: Colors.white),
-                ),
-                backgroundColor: c.online ? Colors.green : Colors.grey,
-                padding: EdgeInsets.zero,
+            ),
+            titulo: c.deviceId,
+            subtitulo: c.online
+                ? 'Toque para monitorar em tempo real'
+                : 'Câmera offline',
+            detalhe: c.ultimoHeartbeat != null
+                ? 'Último sinal: ${_formatTs(c.ultimoHeartbeat!)}'
+                : 'Sem heartbeat',
+            extra: _chipStatus(
+              c.online ? 'ONLINE' : 'OFFLINE',
+              c.online ? Colors.green : Colors.grey,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CameraMonitorScreen(camera: c),
               ),
             ),
           );
@@ -560,6 +351,21 @@ class _ListaCameras extends StatelessWidget {
   }
 }
 
+Widget _chipStatus(String label, Color cor) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: cor.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: cor.withValues(alpha: 0.6)),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: cor, fontSize: 11, fontWeight: FontWeight.w600),
+    ),
+  );
+}
+
 class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String texto;
@@ -569,13 +375,20 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(texto, style: const TextStyle(color: Colors.grey)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 56, color: Colors.grey.shade600),
+            const SizedBox(height: 16),
+            Text(
+              texto,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+            ),
+          ],
+        ),
       ),
     );
   }

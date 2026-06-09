@@ -14,8 +14,6 @@ class PessoaIdentificada {
   final bool provaDeVida;
   final bool temMandado;
   final String? emocao;
-  final String? fotoUrl;
-  final String? frameB64;
 
   PessoaIdentificada({
     required this.id,
@@ -33,8 +31,6 @@ class PessoaIdentificada {
     required this.provaDeVida,
     required this.temMandado,
     this.emocao,
-    this.fotoUrl,
-    this.frameB64,
   });
 
   factory PessoaIdentificada.fromJson(Map<String, dynamic> json) {
@@ -54,12 +50,8 @@ class PessoaIdentificada {
       provaDeVida: json['prova_de_vida'] as bool? ?? false,
       temMandado: json['tem_mandado'] as bool? ?? false,
       emocao: json['emocao'] as String?,
-      fotoUrl: json['foto_url'] as String?,
-      frameB64: json['frame_b64'] as String?,
     );
   }
-
-  String? get imagemRosto => frameB64 ?? fotoUrl;
 
   static String _asString(dynamic value) {
     if (value == null) return '';
