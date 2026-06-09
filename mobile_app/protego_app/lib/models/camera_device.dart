@@ -52,7 +52,11 @@ class HeartbeatEntry {
 
   DateTime? get dateTime {
     try {
-      return DateTime.parse(timestamp);
+      var raw = timestamp.trim();
+      if (!raw.endsWith('Z') && !raw.contains('+') && raw.contains('T')) {
+        raw = '${raw}Z';
+      }
+      return DateTime.parse(raw).toLocal();
     } catch (_) {
       return null;
     }

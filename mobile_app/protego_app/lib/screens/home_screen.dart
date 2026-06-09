@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/app_config.dart';
 import '../models/alerta.dart';
 import '../models/camera_device.dart';
 import '../models/pessoa_identificada.dart';
@@ -33,6 +34,62 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _abrirSeletorAmbiente(BuildContext context, MonitorProvider monitor) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF1E2A3A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Ambiente da API',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Atual: ${monitor.apiBaseUrl}',
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+            ),
+            const SizedBox(height: 20),
+            _OpcaoAmbiente(
+              titulo: 'Railway (produção)',
+              subtitulo: AppConfig.railwayApiUrl,
+              icone: Icons.cloud,
+              selecionado: monitor.ambiente == AmbienteApi.railway,
+              onTap: () async {
+                Navigator.pop(ctx);
+                await monitor.trocarAmbiente(AmbienteApi.railway);
+              },
+            ),
+            const SizedBox(height: 10),
+            _OpcaoAmbiente(
+              titulo: 'Local (desenvolvimento)',
+              subtitulo: AppConfig.localApiUrl,
+              icone: Icons.computer,
+              selecionado: monitor.ambiente == AmbienteApi.local,
+              onTap: () async {
+                Navigator.pop(ctx);
+                await monitor.trocarAmbiente(AmbienteApi.local);
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Local: emulador Android usa 10.0.2.2. Em celular físico, '
+              'ajuste o IP em app_config.dart.',
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   int _contagemTab(MonitorProvider m, int i) {
     switch (i) {
       case 0:
@@ -55,7 +112,19 @@ class _HomeScreenState extends State<HomeScreen> {
             title: const Text('Protego IA'),
             backgroundColor: const Color(0xFF1A237E),
             actions: [
-              _StatusIndicator(apiOnline: monitor.apiOnline),
+              _StatusIndicator(
+                apiOnline: monitor.apiOnline,
+                ambiente: monitor.ambienteLabel,
+              ),
+              IconButton(
+                icon: Icon(
+                  monitor.ambiente == AmbienteApi.railway
+                      ? Icons.cloud_outlined
+                      : Icons.computer_outlined,
+                ),
+                tooltip: 'Trocar ambiente (${monitor.ambienteLabel})',
+                onPressed: () => _abrirSeletorAmbiente(context, monitor),
+              ),
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Atualizar',
@@ -125,19 +194,80 @@ class _TabInfo {
 
 class _StatusIndicator extends StatelessWidget {
   final bool apiOnline;
+  final String ambiente;
 
-  const _StatusIndicator({required this.apiOnline});
+  const _StatusIndicator({required this.apiOnline, required this.ambiente});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Tooltip(
-        message: apiOnline ? 'API Railway online' : 'API offline',
+        message: apiOnline ? 'API $ambiente online' : 'API $ambiente offline',
         child: Icon(
           Icons.cloud,
           color: apiOnline ? Colors.lightGreenAccent : Colors.redAccent,
           size: 22,
+        ),
+      ),
+    );
+  }
+}
+
+class _OpcaoAmbiente extends StatelessWidget {
+  final String titulo;
+  final String subtitulo;
+  final IconData icone;
+  final bool selecionado;
+  final VoidCallback onTap;
+
+  const _OpcaoAmbiente({
+    required this.titulo,
+    required this.subtitulo,
+    required this.icone,
+    required this.selecionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selecionado ? const Color(0xFF283593) : const Color(0xFF263238),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Icon(icone, color: selecionado ? Colors.lightGreenAccent : Colors.grey),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      titulo,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: selecionado ? Colors.white : Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitulo,
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (selecionado)
+                const Icon(Icons.check_circle, color: Colors.lightGreenAccent, size: 22),
+            ],
+          ),
         ),
       ),
     );
@@ -160,6 +290,7 @@ class _ResumoBar extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
+              '${monitor.ambienteLabel} • '
               '${monitor.totalAlertasCriticos} críticos • '
               '${monitor.camerasOnline}/${monitor.cameras.length} câmeras',
               style: const TextStyle(color: Colors.white70, fontSize: 13),
@@ -322,8 +453,8 @@ class _ListaCameras extends StatelessWidget {
             ),
             titulo: c.deviceId,
             subtitulo: c.online
-                ? 'Toque para monitorar em tempo real'
-                : 'Câmera offline',
+                ? 'Toque para ver o log de notificações'
+                : 'Sem sinal recente · toque para ver histórico',
             detalhe: c.ultimoHeartbeat != null
                 ? 'Último sinal: ${_formatTs(c.ultimoHeartbeat!)}'
                 : 'Sem heartbeat',

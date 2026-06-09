@@ -2,15 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/camera_device.dart';
-import '../models/deteccao.dart';
-import '../models/pessoa_identificada.dart';
+import '../models/evento_camera.dart';
 import '../providers/monitor_provider.dart';
-import '../widgets/ficha_suspeito.dart';
+import '../utils/perigo_theme.dart';
+import '../widgets/registro_card.dart';
+import 'detalhe_pessoa_screen.dart';
 
-enum _EstadoMonitor { offline, procurando, encontrado }
-
-/// Monitor passivo da câmera — exibe "Procurando suspeito..." até a IA
-/// identificar alguém cadastrado no banco.
+/// Log de notificações da câmera (alertas + detecções), sem stream de vídeo.
 class CameraMonitorScreen extends StatefulWidget {
   final CameraDevice camera;
 
@@ -20,190 +18,171 @@ class CameraMonitorScreen extends StatefulWidget {
   State<CameraMonitorScreen> createState() => _CameraMonitorScreenState();
 }
 
-class _CameraMonitorScreenState extends State<CameraMonitorScreen>
-    with SingleTickerProviderStateMixin {
+class _CameraMonitorScreenState extends State<CameraMonitorScreen> {
   Timer? _pollTimer;
-  late final AnimationController _pulseCtrl;
-  PessoaIdentificada? _suspeitoEncontrado;
-  Deteccao? _deteccaoAtual;
-  _EstadoMonitor _estado = _EstadoMonitor.procurando;
-  int _ultimaDeteccaoId = 0;
 
   @override
   void initState() {
     super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-
-    _atualizarEstado();
-    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) => _atualizarEstado());
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 4),
+      (_) => context.read<MonitorProvider>().refresh(silencioso: true),
+    );
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _pulseCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _atualizarEstado() async {
-    final monitor = context.read<MonitorProvider>();
-    await monitor.refresh(silencioso: true);
-
-    if (!mounted) return;
-
-    final cameraAtual = monitor.cameras.firstWhere(
-      (c) => c.deviceId == widget.camera.deviceId,
-      orElse: () => widget.camera,
-    );
-
-    if (!cameraAtual.online) {
-      setState(() {
-        _estado = _EstadoMonitor.offline;
-        _suspeitoEncontrado = null;
-        _deteccaoAtual = null;
-      });
-      return;
-    }
-
-    final deteccao = monitor.ultimaDeteccaoCamera(cameraAtual.deviceId);
-    if (deteccao != null && _ehDeteccaoRecente(deteccao)) {
-      final suspeito = await monitor.resolverSuspeito(deteccao);
-      if (!mounted) return;
-
-      if (suspeito != null && deteccao.id != _ultimaDeteccaoId) {
-        _ultimaDeteccaoId = deteccao.id;
-        setState(() {
-          _estado = _EstadoMonitor.encontrado;
-          _suspeitoEncontrado = suspeito;
-          _deteccaoAtual = deteccao;
-        });
-        return;
-      }
-    }
-
-    if (_estado != _EstadoMonitor.encontrado) {
-      setState(() => _estado = _EstadoMonitor.procurando);
-    }
-  }
-
-  bool _ehDeteccaoRecente(Deteccao d) {
-    final dt = DateTime.tryParse(d.timestamp);
-    if (dt == null) return true;
-    return DateTime.now().difference(dt).inMinutes < 3;
-  }
-
-  void _continuarBusca() {
-    setState(() {
-      _estado = _EstadoMonitor.procurando;
-      _suspeitoEncontrado = null;
-      _deteccaoAtual = null;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.camera.deviceId),
-        backgroundColor: const Color(0xFF1A237E),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _atualizarEstado,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _StatusCamera(camera: widget.camera, estado: _estado),
-            const SizedBox(height: 20),
-            if (_estado == _EstadoMonitor.offline)
-              _PainelOffline()
-            else if (_estado == _EstadoMonitor.procurando)
-              _PainelProcurando(pulse: _pulseCtrl)
-            else if (_suspeitoEncontrado != null)
-              Column(
-                children: [
-                  _PainelEncontrado(),
-                  const SizedBox(height: 16),
-                  FichaSuspeito(
-                    pessoa: _suspeitoEncontrado!,
-                    horarioDeteccao: _deteccaoAtual?.timestamp,
-                    cameraId: widget.camera.deviceId,
-                    similaridade: _deteccaoAtual?.similaridadePercent,
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: _continuarBusca,
-                    icon: const Icon(Icons.search),
-                    label: const Text('Continuar busca'),
-                  ),
-                ],
+    return Consumer<MonitorProvider>(
+      builder: (context, monitor, _) {
+        final camera = monitor.cameraPorId(widget.camera.deviceId) ?? widget.camera;
+        final eventos = monitor.logCamera(camera.deviceId);
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(camera.deviceId),
+            backgroundColor: const Color(0xFF1A237E),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () => monitor.refresh(),
               ),
-          ],
-        ),
-      ),
+            ],
+          ),
+          body: RefreshIndicator(
+            onRefresh: () => monitor.refresh(),
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 24),
+              children: [
+                _CabecalhoCamera(camera: camera, totalEventos: eventos.length),
+                if (!camera.online) ...[
+                  const SizedBox(height: 8),
+                  _AvisoOffline(),
+                ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.receipt_long, size: 18, color: Colors.grey.shade400),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Log de notificações',
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (camera.online)
+                        _chipAoVivo(),
+                    ],
+                  ),
+                ),
+                if (eventos.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        Icon(Icons.notifications_none,
+                            size: 56, color: Colors.grey.shade600),
+                        const SizedBox(height: 16),
+                        Text(
+                          camera.online
+                              ? 'Nenhuma notificação ainda.\nAguardando detecções da IA…'
+                              : 'Nenhum registro para esta câmera.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey.shade500),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ...eventos.map((e) => _LogTile(evento: e, monitor: monitor)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-class _StatusCamera extends StatelessWidget {
+class _CabecalhoCamera extends StatelessWidget {
   final CameraDevice camera;
-  final _EstadoMonitor estado;
+  final int totalEventos;
 
-  const _StatusCamera({required this.camera, required this.estado});
+  const _CabecalhoCamera({required this.camera, required this.totalEventos});
 
   @override
   Widget build(BuildContext context) {
-    final online = camera.online;
-    return Card(
+    return Material(
       color: const Color(0xFF1E2A3A),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
         child: Row(
           children: [
-            Icon(
-              online ? Icons.videocam : Icons.videocam_off,
-              color: online ? Colors.lightGreenAccent : Colors.grey,
+            CircleAvatar(
+              radius: 22,
+              backgroundColor:
+                  camera.online ? Colors.green.shade800 : Colors.grey.shade700,
+              child: Icon(
+                camera.online ? Icons.videocam : Icons.videocam_off,
+                color: Colors.white,
+              ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    online ? 'Câmera ativa — IA em execução' : 'Câmera desligada',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  if (camera.ultimoHeartbeat != null)
-                    Text(
-                      'Último sinal: ${_formatTs(camera.ultimoHeartbeat!)}',
-                      style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                    camera.online ? 'Câmera online' : 'Câmera offline',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    camera.ultimoHeartbeat != null
+                        ? 'Último sinal: ${_formatTs(camera.ultimoHeartbeat!)}'
+                        : 'Sem heartbeat registrado',
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                  ),
+                  Text(
+                    '$totalEventos evento(s) no log',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  ),
                 ],
               ),
             ),
-            _chipEstado(estado),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: (camera.online ? Colors.green : Colors.grey)
+                    .withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: camera.online ? Colors.green : Colors.grey,
+                ),
+              ),
+              child: Text(
+                camera.online ? 'ONLINE' : 'OFFLINE',
+                style: TextStyle(
+                  color: camera.online ? Colors.lightGreenAccent : Colors.grey,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _chipEstado(_EstadoMonitor e) {
-    final (label, cor) = switch (e) {
-      _EstadoMonitor.offline => ('OFFLINE', Colors.grey),
-      _EstadoMonitor.procurando => ('BUSCANDO', Colors.orange),
-      _EstadoMonitor.encontrado => ('MATCH', Colors.redAccent),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: cor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: cor),
-      ),
-      child: Text(label, style: TextStyle(color: cor, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -211,109 +190,137 @@ class _StatusCamera extends StatelessWidget {
     return '${dt.day.toString().padLeft(2, '0')}/'
         '${dt.month.toString().padLeft(2, '0')} '
         '${dt.hour.toString().padLeft(2, '0')}:'
-        '${dt.minute.toString().padLeft(2, '0')}';
+        '${dt.minute.toString().padLeft(2, '0')}:'
+        '${dt.second.toString().padLeft(2, '0')}';
   }
 }
 
-class _PainelOffline extends StatelessWidget {
+class _AvisoOffline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return _PainelCentral(
-      icon: Icons.videocam_off,
-      cor: Colors.grey,
-      titulo: 'Câmera desligada',
-      subtitulo:
-          'Ligue a bodycam e inicie o reconhecimento facial no computador para começar a busca.',
-    );
-  }
-}
-
-class _PainelProcurando extends StatelessWidget {
-  final AnimationController pulse;
-
-  const _PainelProcurando({required this.pulse});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: pulse,
-      builder: (context, child) {
-        final opacidade = 0.4 + pulse.value * 0.6;
-        return _PainelCentral(
-          icon: Icons.radar,
-          cor: Colors.orange.withValues(alpha: opacidade),
-          titulo: 'Procurando suspeito...',
-          subtitulo:
-              'A IA está analisando o vídeo em busca de rostos cadastrados no banco.',
-          animado: true,
-        );
-      },
-    );
-  }
-}
-
-class _PainelEncontrado extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return _PainelCentral(
-      icon: Icons.person_search,
-      cor: Colors.redAccent,
-      titulo: 'Suspeito identificado!',
-      subtitulo: 'Alvo cadastrado encontrado na câmera.',
-    );
-  }
-}
-
-class _PainelCentral extends StatelessWidget {
-  final IconData icon;
-  final Color cor;
-  final String titulo;
-  final String subtitulo;
-  final bool animado;
-
-  const _PainelCentral({
-    required this.icon,
-    required this.cor,
-    required this.titulo,
-    required this.subtitulo,
-    this.animado = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-        child: Column(
-          children: [
-            if (animado)
-              SizedBox(
-                width: 72,
-                height: 72,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  color: cor,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: Colors.orange.shade900.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.orange.shade200, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Sem sinal recente. O log abaixo mostra o histórico salvo no Railway.',
+                  style: TextStyle(color: Colors.orange.shade100, fontSize: 12),
                 ),
-              )
-            else
-              Icon(icon, size: 72, color: cor),
-            const SizedBox(height: 20),
-            Text(
-              titulo,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitulo,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+Widget _chipAoVivo() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: Colors.red.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.6)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: const BoxDecoration(
+            color: Colors.redAccent,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        const Text(
+          'AO VIVO',
+          style: TextStyle(
+            color: Colors.redAccent,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _LogTile extends StatelessWidget {
+  final EventoCamera evento;
+  final MonitorProvider monitor;
+
+  const _LogTile({required this.evento, required this.monitor});
+
+  @override
+  Widget build(BuildContext context) {
+    final isAlerta = evento.tipo == TipoEventoCamera.alerta;
+    final icone = isAlerta ? Icons.notifications_active : Icons.face_retouching_natural;
+    final cor = PerigoTheme.corNivel(evento.nivelPerigo);
+    final hora = evento.dateTime != null ? _formatTs(evento.dateTime!) : evento.timestamp;
+
+    return RegistroCard(
+      leading: Icon(icone, color: cor, size: 28),
+      titulo: evento.nome,
+      subtitulo: evento.resumo,
+      detalhe: hora,
+      nivelPerigo: evento.nivelPerigo,
+      extra: _chipTipo(isAlerta),
+      onTap: () => _abrirDetalhe(context),
+    );
+  }
+
+  Widget _chipTipo(bool alerta) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        alerta ? 'ALERTA' : 'DETECÇÃO',
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  void _abrirDetalhe(BuildContext context) {
+    if (evento.alerta != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetalheAlertaScreen(alerta: evento.alerta!),
+        ),
+      );
+      return;
+    }
+    if (evento.deteccao != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetalheDeteccaoScreen(deteccao: evento.deteccao!),
+        ),
+      );
+    }
+  }
+
+  String _formatTs(DateTime dt) {
+    return '${dt.day.toString().padLeft(2, '0')}/'
+        '${dt.month.toString().padLeft(2, '0')}/'
+        '${dt.year} '
+        '${dt.hour.toString().padLeft(2, '0')}:'
+        '${dt.minute.toString().padLeft(2, '0')}:'
+        '${dt.second.toString().padLeft(2, '0')}';
   }
 }

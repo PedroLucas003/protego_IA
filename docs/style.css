@@ -320,6 +320,41 @@ pre, .code {
   display: block;
 }
 
+/* ── Figuras com legenda (molde IoT) ── */
+.img-frame {
+  background: var(--bg2);
+  border: 1px solid var(--borda);
+  overflow: hidden;
+  margin: 0;
+}
+
+.img-frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+  vertical-align: middle;
+}
+
+.img-frame figcaption {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  color: var(--cinza);
+  padding: 10px 14px;
+  border-top: 1px solid var(--borda);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.img-frame.destaque {
+  border-color: rgba(0, 201, 107, 0.25);
+  margin-top: 24px;
+}
+
+.img-frame.destaque figcaption {
+  color: var(--verde);
+}
+
 /* ── Passos executar ── */
 .passo {
   display: grid;

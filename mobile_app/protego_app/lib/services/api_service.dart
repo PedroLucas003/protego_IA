@@ -7,7 +7,8 @@ import '../models/deteccao.dart';
 import '../models/pessoa_identificada.dart';
 
 class ApiService {
-  ApiService({String? baseUrl}) : _baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
+  ApiService({String? baseUrl})
+      : _baseUrl = baseUrl ?? AppConfig.urlFor(AmbienteApi.railway);
 
   final String _baseUrl;
 
@@ -109,10 +110,18 @@ class ApiService {
 
     final agora = DateTime.now();
     return devices.map((d) {
-      final hb = ultimoPorDevice[d['device_id'] as String? ?? ''];
+      final deviceId = d['device_id'] as String? ?? '';
+      final hb = ultimoPorDevice[deviceId];
       final dt = hb?.dateTime;
-      final online = dt != null && agora.difference(dt).inMinutes < 3;
-      return CameraDevice.fromJson(d, ultimoHeartbeat: dt, online: online);
+      final heartbeatRecente = dt != null &&
+          agora.difference(dt).inMinutes <= AppConfig.cameraOfflineMinutes;
+      final statusOnline =
+          hb?.status.toUpperCase() == 'ONLINE' && heartbeatRecente;
+      return CameraDevice.fromJson(
+        d,
+        ultimoHeartbeat: dt,
+        online: heartbeatRecente || statusOnline,
+      );
     }).toList();
   }
 }

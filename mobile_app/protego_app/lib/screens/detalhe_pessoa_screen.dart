@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/alerta.dart';
+import '../models/deteccao.dart';
 import '../models/pessoa_identificada.dart';
 import '../providers/monitor_provider.dart';
 import '../widgets/perigo_badge.dart';
@@ -226,6 +227,79 @@ class DetalheAlertaScreen extends StatelessWidget {
           Text(conteudo),
         ],
       ),
+    );
+  }
+}
+
+class DetalheDeteccaoScreen extends StatelessWidget {
+  final Deteccao deteccao;
+
+  const DetalheDeteccaoScreen({super.key, required this.deteccao});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(deteccao.nome),
+        backgroundColor: const Color(0xFF1A237E),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    deteccao.nome,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  PerigoBadge(nivel: deteccao.nivelPerigo),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _infoTile(Icons.percent, 'Similaridade',
+              '${deteccao.similaridadePercent.toStringAsFixed(1)}%'),
+          _infoTile(Icons.videocam, 'Câmera', deteccao.deviceId),
+          _infoTile(Icons.access_time, 'Horário', deteccao.timestamp),
+          if (deteccao.emocao != null && deteccao.emocao!.isNotEmpty)
+            _infoTile(Icons.mood, 'Emoção', deteccao.emocao!),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            children: [
+              StatusChip(
+                label: 'Anti-spoofing',
+                icon: Icons.security,
+                color: Colors.blue,
+                ativo: deteccao.antiSpoofing,
+              ),
+              StatusChip(
+                label: 'Prova de vida',
+                icon: Icons.visibility,
+                color: Colors.green,
+                ativo: deteccao.provaDeVida,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile(IconData icon, String titulo, String valor) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF3949AB)),
+      title: Text(titulo, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      subtitle: Text(valor, style: const TextStyle(fontSize: 15)),
+      contentPadding: EdgeInsets.zero,
     );
   }
 }

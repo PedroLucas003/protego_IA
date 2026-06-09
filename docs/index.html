@@ -144,16 +144,18 @@
     <li><code>firmware/phase5-wss-mtls/</code> — WebSocket seguro com mTLS</li>
   </ul>
 
+  <h3>Esquema 3D da PCB</h3>
+  <p>Placa de suporte da bodycam — layout 3D com posicionamento do ESP32-CAM, trilhas e conexões de alimentação.</p>
+
+  <figure class="img-frame destaque">
+    <img src="images/hardware/PCB.jpeg" alt="Esquema 3D da placa PCB bodycam Protego IA">
+    <figcaption>Esquema 3D PCB · Bodycam Protego IA</figcaption>
+  </figure>
+
   <div class="img-grid">
     <div class="img-placeholder">
       <div class="icon">📷</div>
-      <span>FOTO DO HARDWARE · INSERIR IMAGEM</span>
-      <!-- <img src="images/hardware.jpg" alt="Hardware ESP32-CAM"> -->
-    </div>
-    <div class="img-placeholder">
-      <div class="icon">🔌</div>
-      <span>DIAGRAMA PCB / CONEXÕES · INSERIR IMAGEM</span>
-      <!-- <img src="images/pcb.png" alt="Diagrama PCB"> -->
+      <span>FOTO DO HARDWARE MONTADO · INSERIR IMAGEM</span>
     </div>
   </div>
 </section>
@@ -231,7 +233,7 @@
 
   <div class="content-block amarelo">
     <div class="autor-tag">JÚLIO ROZO — APP MOBILE</div>
-    <p>Aplicativo Flutter em <code>mobile_app/protego_app/</code> — cliente operacional do policial. Consome a API REST do Railway com polling automático. Exibe apenas dados textuais, sem imagens.</p>
+    <p>Aplicativo Flutter em <code>mobile_app/protego_app/</code> — cliente operacional do policial. Consome a API REST do Railway com polling automático e exibe suspeitos, status das câmeras e alertas em tempo real.</p>
   </div>
 
   <h3>Abas do aplicativo</h3>
@@ -246,29 +248,31 @@
     </tbody>
   </table>
 
+  <h3>Interface do aplicativo</h3>
+  <p>Três abas principais do monitoramento operacional — capturas reais do app em execução.</p>
+
+  <div class="img-grid">
+    <figure class="img-frame">
+      <img src="images/app/App_Suspeitos.jpeg" alt="Aba Suspeitos — alvos cadastrados e identificados">
+      <figcaption>Tela Suspeitos</figcaption>
+    </figure>
+    <figure class="img-frame">
+      <img src="images/app/App_Cameras.jpeg" alt="Aba Câmeras — status online e offline das bodycams">
+      <figcaption>Tela Câmeras</figcaption>
+    </figure>
+    <figure class="img-frame">
+      <img src="images/app/App_Alertas.jpeg" alt="Aba Alertas — notificações da IA com nível de perigo">
+      <figcaption>Tela Alertas</figcaption>
+    </figure>
+  </div>
+
   <h3>Monitor de câmera</h3>
   <p>Ao abrir uma câmera online, o app exibe passivamente <strong>"Procurando suspeito..."</strong> até a IA identificar alguém cadastrado e exibir a ficha completa.</p>
 
   <div class="img-grid">
     <div class="img-placeholder">
-      <div class="icon">📱</div>
-      <span>TELA SUSPEITOS · INSERIR IMAGEM</span>
-      <!-- <img src="images/app-suspeitos.png" alt="Tela Suspeitos"> -->
-    </div>
-    <div class="img-placeholder">
-      <div class="icon">📷</div>
-      <span>TELA CÂMERAS · INSERIR IMAGEM</span>
-      <!-- <img src="images/app-cameras.png" alt="Tela Câmeras"> -->
-    </div>
-    <div class="img-placeholder">
-      <div class="icon">🔔</div>
-      <span>TELA ALERTAS · INSERIR IMAGEM</span>
-      <!-- <img src="images/app-alertas.png" alt="Tela Alertas"> -->
-    </div>
-    <div class="img-placeholder">
       <div class="icon">🔍</div>
       <span>MONITOR SUSPEITO · INSERIR IMAGEM</span>
-      <!-- <img src="images/app-monitor.png" alt="Monitor"> -->
     </div>
   </div>
 </section>
@@ -288,24 +292,28 @@
   <div class="img-grid">
     <div class="img-placeholder">
       <div class="icon">🖼️</div>
-      <span>FOTO BODYCAM · INSERIR IMAGEM</span>
+      <span>FOTO BODYCAM MONTADA · INSERIR IMAGEM</span>
     </div>
-    <div class="img-placeholder">
-      <div class="icon">🖼️</div>
-      <span>FOTO PCB · INSERIR IMAGEM</span>
-    </div>
+    <figure class="img-frame">
+      <img src="images/hardware/PCB.jpeg" alt="Esquema 3D da PCB bodycam">
+      <figcaption>Esquema 3D PCB</figcaption>
+    </figure>
   </div>
 
   <h3>Prints do aplicativo</h3>
   <div class="img-grid">
-    <div class="img-placeholder">
-      <div class="icon">📱</div>
-      <span>PRINT APP · INSERIR IMAGEM</span>
-    </div>
-    <div class="img-placeholder">
-      <div class="icon">📱</div>
-      <span>PRINT APP · INSERIR IMAGEM</span>
-    </div>
+    <figure class="img-frame">
+      <img src="images/app/App_Suspeitos.jpeg" alt="Print aba Suspeitos">
+      <figcaption>Suspeitos</figcaption>
+    </figure>
+    <figure class="img-frame">
+      <img src="images/app/App_Cameras.jpeg" alt="Print aba Câmeras">
+      <figcaption>Câmeras</figcaption>
+    </figure>
+    <figure class="img-frame">
+      <img src="images/app/App_Alertas.jpeg" alt="Print aba Alertas">
+      <figcaption>Alertas</figcaption>
+    </figure>
   </div>
 
   <h3>Diagramas (draw.io)</h3>

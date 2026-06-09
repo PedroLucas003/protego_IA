@@ -1,16 +1,24 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../models/alerta.dart';
 import '../models/camera_device.dart';
 import '../models/deteccao.dart';
+import '../models/evento_camera.dart';
 import '../models/pessoa_identificada.dart';
 import '../services/api_service.dart';
+import '../utils/device_id_utils.dart';
 
 class MonitorProvider extends ChangeNotifier {
-  MonitorProvider({ApiService? api}) : _api = api ?? ApiService();
+  MonitorProvider({ApiService? api, AmbienteApi? ambienteInicial})
+      : _ambiente = ambienteInicial ?? AmbienteApi.railway,
+        _api = api ?? ApiService(baseUrl: AppConfig.urlFor(ambienteInicial ?? AmbienteApi.railway));
 
-  final ApiService _api;
+  static const _prefsKeyAmbiente = 'ambiente_api';
+
+  ApiService _api;
+  AmbienteApi _ambiente;
 
   List<Deteccao> deteccoes = [];
   List<Alerta> alertas = [];
@@ -31,13 +39,39 @@ class MonitorProvider extends ChangeNotifier {
 
   bool _isCritico(String nivel) => nivel == 'CRITICO' || nivel == 'ALTO';
 
+  AmbienteApi get ambiente => _ambiente;
+
+  String get apiBaseUrl => AppConfig.urlFor(_ambiente);
+
+  String get ambienteLabel => AppConfig.labelFor(_ambiente);
+
   Future<void> iniciar() async {
     carregando = true;
     erro = null;
     notifyListeners();
 
+    final prefs = await SharedPreferences.getInstance();
+    _ambiente = AppConfig.ambienteFromStorage(prefs.getString(_prefsKeyAmbiente));
+    _api = ApiService(baseUrl: apiBaseUrl);
+
     await refresh();
     _iniciarPolling();
+  }
+
+  Future<void> trocarAmbiente(AmbienteApi novo) async {
+    if (_ambiente == novo) return;
+
+    _ambiente = novo;
+    _api = ApiService(baseUrl: apiBaseUrl);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKeyAmbiente, AppConfig.storageKeyFor(novo));
+
+    carregando = true;
+    erro = null;
+    notifyListeners();
+
+    await refresh();
   }
 
   void _iniciarPolling() {
@@ -66,7 +100,11 @@ class MonitorProvider extends ChangeNotifier {
       deteccoes = results[0] as List<Deteccao>;
       alertas = results[1] as List<Alerta>;
       pessoas = results[2] as List<PessoaIdentificada>;
-      cameras = results[3] as List<CameraDevice>;
+      cameras = _aplicarStatusOnline(
+        results[3] as List<CameraDevice>,
+        deteccoes,
+        alertas,
+      );
 
       erro = null;
       ultimaAtualizacao = DateTime.now();
@@ -87,12 +125,105 @@ class MonitorProvider extends ChangeNotifier {
     }
   }
 
+  List<CameraDevice> _aplicarStatusOnline(
+    List<CameraDevice> lista,
+    List<Deteccao> dets,
+    List<Alerta> alts,
+  ) {
+    final agora = DateTime.now();
+    return lista.map((c) {
+      if (c.online) return c;
+      if (_temAtividadeRecente(c.deviceId, dets, alts, agora)) {
+        return CameraDevice(
+          id: c.id,
+          deviceId: c.deviceId,
+          status: c.status,
+          ultimoHeartbeat: c.ultimoHeartbeat,
+          online: true,
+        );
+      }
+      return c;
+    }).toList();
+  }
+
+  bool _temAtividadeRecente(
+    String deviceId,
+    List<Deteccao> dets,
+    List<Alerta> alts,
+    DateTime agora,
+  ) {
+    for (final d in dets) {
+      if (!DeviceIdUtils.mesmoDispositivo(d.deviceId, deviceId)) continue;
+      final dt = _parseTs(d.timestamp);
+      if (dt != null &&
+          agora.difference(dt).inMinutes <= AppConfig.cameraAtividadeMinutes) {
+        return true;
+      }
+    }
+    for (final a in alts) {
+      if (!DeviceIdUtils.mesmoDispositivo(a.deviceId, deviceId)) continue;
+      final dt = _parseTs(a.timestamp);
+      if (dt != null &&
+          agora.difference(dt).inMinutes <= AppConfig.cameraAtividadeMinutes) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  DateTime? _parseTs(String raw) {
+    try {
+      var s = raw.trim();
+      if (!s.endsWith('Z') && !s.contains('+') && s.contains('T')) {
+        s = '${s}Z';
+      }
+      return DateTime.parse(s).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  CameraDevice? cameraPorId(String deviceId) {
+    for (final c in cameras) {
+      if (DeviceIdUtils.mesmoDispositivo(c.deviceId, deviceId)) return c;
+    }
+    return null;
+  }
+
+  /// Log unificado de alertas e detecções da câmera, mais recentes primeiro.
+  List<EventoCamera> logCamera(String deviceId) {
+    final eventos = <EventoCamera>[];
+
+    for (final a in alertas) {
+      if (DeviceIdUtils.mesmoDispositivo(a.deviceId, deviceId)) {
+        eventos.add(EventoCamera.fromAlerta(enriquecerAlerta(a)));
+      }
+    }
+    for (final d in deteccoes) {
+      if (DeviceIdUtils.mesmoDispositivo(d.deviceId, deviceId)) {
+        eventos.add(EventoCamera.fromDeteccao(d));
+      }
+    }
+
+    eventos.sort((a, b) {
+      final da = a.dateTime;
+      final db = b.dateTime;
+      if (da == null && db == null) return b.id.compareTo(a.id);
+      if (da == null) return 1;
+      if (db == null) return -1;
+      final cmp = db.compareTo(da);
+      return cmp != 0 ? cmp : b.id.compareTo(a.id);
+    });
+
+    return eventos;
+  }
+
   /// Última detecção da câmera informada.
   Deteccao? ultimaDeteccaoCamera(String deviceId) {
     for (final d in deteccoes) {
-      if (d.deviceId == deviceId) return d;
+      if (DeviceIdUtils.mesmoDispositivo(d.deviceId, deviceId)) return d;
     }
-    return deteccoes.isNotEmpty ? deteccoes.first : null;
+    return null;
   }
 
   /// Busca suspeito cadastrado pelo nome da detecção.
