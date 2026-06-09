@@ -6,19 +6,21 @@ venv/
 __pycache__/
 *.pyc
 
-# Ignorar o banco de dados local (Opcional, mas recomendado para privacidade)
+# Ignorar o banco de dados local
 banco_faces/
 encodings.pickle
+logs/
+capturas_alvos/
+suspeitos_detectados/
 
 # Credenciais e variáveis de ambiente
 .env
 *.env
 
-@"
-# PlatformIO build
-.pio/
-.vscode/
-
-# Dependências
-.penv/
-"@ | Out-File -FilePath firmware\.gitignore -Encoding utf8
+# Flutter — mobile_app/protego_app
+mobile_app/protego_app/.dart_tool/
+mobile_app/protego_app/build/
+mobile_app/protego_app/.pub/
+mobile_app/protego_app/assets/certs/*.crt
+mobile_app/protego_app/assets/certs/*.key
+mobile_app/protego_app/assets/certs/*.pem
