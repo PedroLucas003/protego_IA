@@ -1,6 +1,5 @@
-# Protego IA
 
-# Protego IA 🔍
+# Protego IA 
 
 Sistema de reconhecimento facial em tempo real para bodycam policial, desenvolvido como projeto integrador na Nova Roma.
 
