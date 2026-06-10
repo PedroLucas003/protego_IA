@@ -1,26 +1,36 @@
-# Ignorar o ambiente virtual
+cd C:\Users\pedro\Desktop\Bodycam_AI
+
+@"
+# Ambiente virtual
 .venv/
 venv/
 
-# Ignorar arquivos temporários do Python
+# Python
 __pycache__/
 *.pyc
-
-# Ignorar o banco de dados local
-banco_faces/
-encodings.pickle
-logs/
-capturas_alvos/
-suspeitos_detectados/
+*.pyo
 
 # Credenciais e variáveis de ambiente
 .env
 *.env
 
-# Flutter — mobile_app/protego_app
-mobile_app/protego_app/.dart_tool/
-mobile_app/protego_app/build/
-mobile_app/protego_app/.pub/
-mobile_app/protego_app/assets/certs/*.crt
-mobile_app/protego_app/assets/certs/*.key
-mobile_app/protego_app/assets/certs/*.pem
+# Banco local
+banco_faces/
+encodings.pickle
+
+# PlatformIO
+.pio/
+.penv/
+
+# VSCode
+.vscode/
+
+# Logs e capturas
+logs/
+suspeitos_detectados/
+capturas_alvos/
+
+# Arquivos temporários
+*.bin
+*.inocls
+"@ | Out-File -FilePath .gitignore -Encoding utf8
