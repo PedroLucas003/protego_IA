@@ -1,3 +1,5 @@
+import '../utils/timestamp_utils.dart';
+
 class CameraDevice {
   final int id;
   final String deviceId;
@@ -50,15 +52,5 @@ class HeartbeatEntry {
     );
   }
 
-  DateTime? get dateTime {
-    try {
-      var raw = timestamp.trim();
-      if (!raw.endsWith('Z') && !raw.contains('+') && raw.contains('T')) {
-        raw = '${raw}Z';
-      }
-      return DateTime.parse(raw).toLocal();
-    } catch (_) {
-      return null;
-    }
-  }
+  DateTime? get dateTime => parseApiTimestamp(timestamp);
 }

@@ -19,8 +19,8 @@ class AppConfig {
   /// Sem heartbeat neste intervalo → offline (salvo atividade recente).
   static const int cameraOfflineMinutes = 5;
 
-  /// Detecção/alerta recente também marca câmera como online.
-  static const int cameraAtividadeMinutes = 15;
+  /// Detecção/alerta/identificação recente também marca câmera como online.
+  static const int cameraAtividadeMinutes = 30;
 
   /// URL da API local conforme a plataforma.
   /// Android emulador: 10.0.2.2 · demais: localhost.

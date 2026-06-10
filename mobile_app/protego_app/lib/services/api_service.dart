@@ -4,6 +4,7 @@ import '../config/app_config.dart';
 import '../models/alerta.dart';
 import '../models/camera_device.dart';
 import '../models/deteccao.dart';
+import '../utils/timestamp_utils.dart';
 import '../models/pessoa_identificada.dart';
 
 class ApiService {
@@ -25,6 +26,23 @@ class ApiService {
     }
   }
 
+  List<T> _ordenarPorRecencia<T>(
+    List<T> lista,
+    String Function(T) timestampDe,
+    int Function(T) idDe,
+  ) {
+    lista.sort((a, b) {
+      final da = parseApiTimestamp(timestampDe(a));
+      final db = parseApiTimestamp(timestampDe(b));
+      if (da != null && db != null) {
+        final cmp = db.compareTo(da);
+        if (cmp != 0) return cmp;
+      }
+      return idDe(b).compareTo(idDe(a));
+    });
+    return lista;
+  }
+
   Future<List<Deteccao>> listarDeteccoes() async {
     final r = await http
         .get(Uri.parse('$_baseUrl/deteccoes'))
@@ -33,10 +51,11 @@ class ApiService {
       throw Exception('Erro detecções: ${r.statusCode}');
     }
     final list = jsonDecode(r.body) as List<dynamic>;
-    return list
-        .map((e) => Deteccao.fromJson(e as Map<String, dynamic>))
-        .toList()
-      ..sort((a, b) => b.id.compareTo(a.id));
+    return _ordenarPorRecencia(
+      list.map((e) => Deteccao.fromJson(e as Map<String, dynamic>)).toList(),
+      (d) => d.timestamp,
+      (d) => d.id,
+    );
   }
 
   Future<List<Alerta>> listarAlertas() async {
@@ -47,10 +66,11 @@ class ApiService {
       throw Exception('Erro alertas: ${r.statusCode}');
     }
     final list = jsonDecode(r.body) as List<dynamic>;
-    return list
-        .map((e) => Alerta.fromJson(e as Map<String, dynamic>))
-        .toList()
-      ..sort((a, b) => b.id.compareTo(a.id));
+    return _ordenarPorRecencia(
+      list.map((e) => Alerta.fromJson(e as Map<String, dynamic>)).toList(),
+      (a) => a.timestamp,
+      (a) => a.id,
+    );
   }
 
   Future<List<PessoaIdentificada>> listarPessoas() async {

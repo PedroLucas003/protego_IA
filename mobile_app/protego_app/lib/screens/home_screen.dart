@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_config.dart';
-import '../models/alerta.dart';
 import '../models/camera_device.dart';
+import '../models/evento_camera.dart';
 import '../models/pessoa_identificada.dart';
 import '../providers/monitor_provider.dart';
 import '../utils/perigo_theme.dart';
+import '../utils/timestamp_utils.dart';
 import '../widgets/registro_card.dart';
 import 'camera_monitor_screen.dart';
 import 'detalhe_pessoa_screen.dart';
@@ -97,7 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return m.camerasOnline;
       case 2:
-        return m.alertas.length;
+        return m.notificacoesRecentes > 0
+            ? m.notificacoesRecentes
+            : m.totalNotificacoes;
       default:
         return 0;
     }
@@ -148,14 +151,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               Expanded(
-                child: monitor.carregando && monitor.pessoas.isEmpty && monitor.alertas.isEmpty
+                child: monitor.carregando &&
+                        monitor.pessoas.isEmpty &&
+                        monitor.deteccoes.isEmpty &&
+                        monitor.alertas.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : IndexedStack(
                         index: _tabIndex,
                         children: [
                           _ListaSuspeitos(pessoas: monitor.pessoas),
                           _ListaCameras(cameras: monitor.cameras),
-                          _ListaAlertas(alertas: monitor.alertas),
+                          _ListaAlertas(monitor: monitor),
                         ],
                       ),
               ),
@@ -291,7 +297,8 @@ class _ResumoBar extends StatelessWidget {
           Expanded(
             child: Text(
               '${monitor.ambienteLabel} • '
-              '${monitor.totalAlertasCriticos} críticos • '
+              '${monitor.deteccoes.length} detecções • '
+              '${monitor.alertas.length} alertas • '
               '${monitor.camerasOnline}/${monitor.cameras.length} câmeras',
               style: const TextStyle(color: Colors.white70, fontSize: 13),
               maxLines: 1,
@@ -318,42 +325,111 @@ class _ResumoBar extends StatelessWidget {
 }
 
 class _ListaAlertas extends StatelessWidget {
-  final List<Alerta> alertas;
+  final MonitorProvider monitor;
 
-  const _ListaAlertas({required this.alertas});
+  const _ListaAlertas({required this.monitor});
 
   @override
   Widget build(BuildContext context) {
-    if (alertas.isEmpty) {
+    final eventos = monitor.feedAlertasDeteccoes();
+
+    if (eventos.isEmpty) {
       return const _EmptyState(
         icon: Icons.notifications_off,
-        texto: 'Nenhum alerta no banco.',
+        texto: 'Nenhum alerta ou detecção.\nAguardando a IA publicar no Railway…',
       );
     }
     return RefreshIndicator(
-      onRefresh: () => context.read<MonitorProvider>().refresh(),
+      onRefresh: () => monitor.refresh(),
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 8, bottom: 16),
-        itemCount: alertas.length,
+        itemCount: eventos.length + 1,
         itemBuilder: (context, i) {
-          final a = context.read<MonitorProvider>().enriquecerAlerta(alertas[i]);
-          return RegistroCard(
-            leading: Icon(
-              Icons.warning_amber_rounded,
-              color: PerigoTheme.corNivel(a.nivelPerigo),
-              size: 32,
-            ),
-            titulo: a.nome,
-            subtitulo: a.mensagem ?? 'Alerta de reconhecimento',
-            detalhe: '${a.deviceId} • ${a.timestamp}',
-            nivelPerigo: a.nivelPerigo,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => DetalheAlertaScreen(alerta: a)),
-            ),
+          if (i == 0) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Text(
+                '/alertas (${monitor.alertas.length}) + /deteccoes (${monitor.deteccoes.length})'
+                ' · atualiza a cada ${AppConfig.pollIntervalSeconds}s',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+              ),
+            );
+          }
+          final e = eventos[i - 1];
+          final recente = timestampRecente(
+            e.timestamp,
+            minutos: AppConfig.cameraAtividadeMinutes,
           );
+          return _EventoNotificacaoCard(evento: e, recente: recente);
         },
       ),
+    );
+  }
+}
+
+class _EventoNotificacaoCard extends StatelessWidget {
+  final EventoCamera evento;
+  final bool recente;
+
+  const _EventoNotificacaoCard({
+    required this.evento,
+    required this.recente,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isAlerta = evento.tipo == TipoEventoCamera.alerta;
+    final isDeteccao = evento.tipo == TipoEventoCamera.deteccao;
+
+    final leading = isDeteccao
+        ? CircleAvatar(
+            radius: 20,
+            backgroundColor: PerigoTheme.corNivel(evento.nivelPerigo),
+            child: Text(
+              '${evento.deteccao!.similaridadePercent.toStringAsFixed(0)}%',
+              style: const TextStyle(fontSize: 10, color: Colors.white),
+            ),
+          )
+        : Icon(
+            Icons.warning_amber_rounded,
+            color: PerigoTheme.corNivel(evento.nivelPerigo),
+            size: 32,
+          );
+
+    final tipoLabel = isAlerta ? 'ALERTA' : 'DETECÇÃO';
+
+    return RegistroCard(
+      leading: leading,
+      titulo: evento.nome,
+      subtitulo: evento.resumo,
+      detalhe: evento.deviceId != null && evento.deviceId!.isNotEmpty
+          ? '${evento.deviceId} • ${formatApiTimestamp(evento.timestamp)}'
+          : formatApiTimestamp(evento.timestamp),
+      nivelPerigo: evento.nivelPerigo,
+      extra: Wrap(
+        spacing: 6,
+        children: [
+          _chipStatus(tipoLabel, isAlerta ? Colors.orangeAccent : Colors.blueAccent),
+          if (recente) _chipStatus('NOVO', Colors.lightGreenAccent),
+        ],
+      ),
+      onTap: () {
+        if (evento.alerta != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DetalheAlertaScreen(alerta: evento.alerta!),
+            ),
+          );
+        } else if (evento.deteccao != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DetalheDeteccaoScreen(deteccao: evento.deteccao!),
+            ),
+          );
+        }
+      },
     );
   }
 }

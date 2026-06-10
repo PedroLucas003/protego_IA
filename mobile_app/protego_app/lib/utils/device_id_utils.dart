@@ -7,4 +7,10 @@ class DeviceIdUtils {
     if (a.isEmpty || b.isEmpty) return false;
     return normalizar(a) == normalizar(b);
   }
+
+  /// Câmera principal quando identificações não trazem device_id.
+  static bool ehCameraPrincipal(String deviceId) {
+    final n = normalizar(deviceId);
+    return n == 'camera_01' || n == 'esp32cam_01' || n.contains('bodycam');
+  }
 }

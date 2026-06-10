@@ -4,6 +4,7 @@ import '../models/alerta.dart';
 import '../models/deteccao.dart';
 import '../models/pessoa_identificada.dart';
 import '../providers/monitor_provider.dart';
+import '../utils/timestamp_utils.dart';
 import '../widgets/perigo_badge.dart';
 import '../widgets/status_chip.dart';
 
@@ -44,7 +45,7 @@ class DetalhePessoaScreen extends StatelessWidget {
           _infoTile(Icons.badge, 'CPF', pessoa.cpf),
           _infoTile(Icons.credit_card, 'RG', pessoa.rg),
           _infoTile(Icons.flag, 'Status', pessoa.status),
-          _infoTile(Icons.access_time, 'Horário', pessoa.timestamp),
+          _infoTile(Icons.access_time, 'Horário', formatApiTimestamp(pessoa.timestamp)),
           _infoTile(
             Icons.percent,
             'Confiança',
@@ -159,7 +160,7 @@ class DetalheAlertaScreen extends StatelessWidget {
           const SizedBox(height: 8),
           _infoTile(Icons.message, 'Mensagem', a.mensagem ?? 'Alerta de reconhecimento'),
           _infoTile(Icons.videocam, 'Câmera', a.deviceId),
-          _infoTile(Icons.access_time, 'Horário', a.timestamp),
+          _infoTile(Icons.access_time, 'Horário', formatApiTimestamp(a.timestamp)),
           if (a.status != null && a.status!.isNotEmpty)
             _infoTile(Icons.flag, 'Status', a.status!),
           if (a.confianca != null)
@@ -268,7 +269,7 @@ class DetalheDeteccaoScreen extends StatelessWidget {
           _infoTile(Icons.percent, 'Similaridade',
               '${deteccao.similaridadePercent.toStringAsFixed(1)}%'),
           _infoTile(Icons.videocam, 'Câmera', deteccao.deviceId),
-          _infoTile(Icons.access_time, 'Horário', deteccao.timestamp),
+          _infoTile(Icons.access_time, 'Horário', formatApiTimestamp(deteccao.timestamp)),
           if (deteccao.emocao != null && deteccao.emocao!.isNotEmpty)
             _infoTile(Icons.mood, 'Emoção', deteccao.emocao!),
           const SizedBox(height: 12),

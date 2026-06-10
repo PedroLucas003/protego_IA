@@ -5,6 +5,7 @@ import '../models/camera_device.dart';
 import '../models/evento_camera.dart';
 import '../providers/monitor_provider.dart';
 import '../utils/perigo_theme.dart';
+import '../utils/timestamp_utils.dart';
 import '../widgets/registro_card.dart';
 import 'detalhe_pessoa_screen.dart';
 
@@ -265,9 +266,14 @@ class _LogTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAlerta = evento.tipo == TipoEventoCamera.alerta;
-    final icone = isAlerta ? Icons.notifications_active : Icons.face_retouching_natural;
+    final isDeteccao = evento.tipo == TipoEventoCamera.deteccao;
+    final icone = isAlerta
+        ? Icons.notifications_active
+        : isDeteccao
+            ? Icons.face_retouching_natural
+            : Icons.person_search;
     final cor = PerigoTheme.corNivel(evento.nivelPerigo);
-    final hora = evento.dateTime != null ? _formatTs(evento.dateTime!) : evento.timestamp;
+    final hora = formatApiTimestamp(evento.timestamp);
 
     return RegistroCard(
       leading: Icon(icone, color: cor, size: 28),
@@ -275,12 +281,17 @@ class _LogTile extends StatelessWidget {
       subtitulo: evento.resumo,
       detalhe: hora,
       nivelPerigo: evento.nivelPerigo,
-      extra: _chipTipo(isAlerta),
+      extra: _chipTipo(evento.tipo),
       onTap: () => _abrirDetalhe(context),
     );
   }
 
-  Widget _chipTipo(bool alerta) {
+  Widget _chipTipo(TipoEventoCamera tipo) {
+    final label = switch (tipo) {
+      TipoEventoCamera.alerta => 'ALERTA',
+      TipoEventoCamera.deteccao => 'DETECÇÃO',
+      TipoEventoCamera.identificacao => 'IDENTIFICADO',
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
@@ -289,7 +300,7 @@ class _LogTile extends StatelessWidget {
         border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
       ),
       child: Text(
-        alerta ? 'ALERTA' : 'DETECÇÃO',
+        label,
         style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
       ),
     );
@@ -312,15 +323,15 @@ class _LogTile extends StatelessWidget {
           builder: (_) => DetalheDeteccaoScreen(deteccao: evento.deteccao!),
         ),
       );
+      return;
     }
-  }
-
-  String _formatTs(DateTime dt) {
-    return '${dt.day.toString().padLeft(2, '0')}/'
-        '${dt.month.toString().padLeft(2, '0')}/'
-        '${dt.year} '
-        '${dt.hour.toString().padLeft(2, '0')}:'
-        '${dt.minute.toString().padLeft(2, '0')}:'
-        '${dt.second.toString().padLeft(2, '0')}';
+    if (evento.pessoa != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetalhePessoaScreen(pessoa: evento.pessoa!),
+        ),
+      );
+    }
   }
 }

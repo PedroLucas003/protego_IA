@@ -9,6 +9,7 @@ import '../models/evento_camera.dart';
 import '../models/pessoa_identificada.dart';
 import '../services/api_service.dart';
 import '../utils/device_id_utils.dart';
+import '../utils/timestamp_utils.dart';
 
 class MonitorProvider extends ChangeNotifier {
   MonitorProvider({ApiService? api, AmbienteApi? ambienteInicial})
@@ -36,6 +37,54 @@ class MonitorProvider extends ChangeNotifier {
       alertas.where((a) => _isCritico(a.nivelPerigo)).length;
 
   int get camerasOnline => cameras.where((c) => c.online).length;
+
+  int get deteccoesRecentes => deteccoes
+      .where((d) => timestampRecente(
+            d.timestamp,
+            minutos: AppConfig.cameraAtividadeMinutes,
+          ))
+      .length;
+
+  int get alertasRecentes => alertas
+      .where((a) => timestampRecente(
+            a.timestamp,
+            minutos: AppConfig.cameraAtividadeMinutes,
+          ))
+      .length;
+
+  int get totalNotificacoes => alertas.length + deteccoes.length;
+
+  int get notificacoesRecentes => deteccoesRecentes + alertasRecentes;
+
+  /// Feed unificado da aba Alertas: /alertas + /deteccoes.
+  List<EventoCamera> feedAlertasDeteccoes() {
+    final eventos = <EventoCamera>[];
+    final chaves = <String>{};
+
+    void add(EventoCamera e) {
+      final chave = '${e.tipo.name}_${e.id}_${e.timestamp}_${e.nome}';
+      if (chaves.add(chave)) eventos.add(e);
+    }
+
+    for (final a in alertas) {
+      add(EventoCamera.fromAlerta(enriquecerAlerta(a)));
+    }
+    for (final d in deteccoes) {
+      add(EventoCamera.fromDeteccao(d));
+    }
+
+    eventos.sort((a, b) {
+      final da = a.dateTime;
+      final db = b.dateTime;
+      if (da == null && db == null) return b.id.compareTo(a.id);
+      if (da == null) return 1;
+      if (db == null) return -1;
+      final cmp = db.compareTo(da);
+      return cmp != 0 ? cmp : b.id.compareTo(a.id);
+    });
+
+    return eventos;
+  }
 
   bool _isCritico(String nivel) => nivel == 'CRITICO' || nivel == 'ALTO';
 
@@ -88,33 +137,48 @@ class MonitorProvider extends ChangeNotifier {
       notifyListeners();
     }
 
+    final erros = <String>[];
+
     try {
       apiOnline = await _api.healthCheck();
-      final results = await Future.wait([
-        _api.listarDeteccoes(),
-        _api.listarAlertas(),
-        _api.listarPessoas(),
-        _api.listarCameras(),
-      ]);
+    } catch (_) {
+      apiOnline = false;
+    }
 
-      deteccoes = results[0] as List<Deteccao>;
-      alertas = results[1] as List<Alerta>;
-      pessoas = results[2] as List<PessoaIdentificada>;
+    try {
+      deteccoes = await _api.listarDeteccoes();
+    } catch (e) {
+      erros.add('Detecções: $e');
+    }
+
+    try {
+      alertas = await _api.listarAlertas();
+    } catch (e) {
+      erros.add('Alertas: $e');
+    }
+
+    try {
+      pessoas = await _api.listarPessoas();
+    } catch (e) {
+      erros.add('Suspeitos: $e');
+    }
+
+    try {
       cameras = _aplicarStatusOnline(
-        results[3] as List<CameraDevice>,
+        await _api.listarCameras(),
         deteccoes,
         alertas,
+        pessoas,
       );
-
-      erro = null;
-      ultimaAtualizacao = DateTime.now();
     } catch (e) {
-      erro = e.toString();
-      apiOnline = false;
-    } finally {
-      carregando = false;
-      notifyListeners();
+      erros.add('Câmeras: $e');
     }
+
+    erro = erros.isEmpty ? null : erros.join(' | ');
+    if (!apiOnline && erros.isNotEmpty) apiOnline = false;
+    ultimaAtualizacao = DateTime.now();
+    carregando = false;
+    notifyListeners();
   }
 
   Future<PessoaIdentificada?> buscarPessoaCompleta(PessoaIdentificada pessoa) async {
@@ -129,21 +193,36 @@ class MonitorProvider extends ChangeNotifier {
     List<CameraDevice> lista,
     List<Deteccao> dets,
     List<Alerta> alts,
+    List<PessoaIdentificada> pessoasList,
   ) {
     final agora = DateTime.now();
+    final temPessoaRecente = pessoasList.any(
+      (p) => timestampRecente(
+        p.timestamp,
+        minutos: AppConfig.cameraAtividadeMinutes,
+      ),
+    );
+
     return lista.map((c) {
       if (c.online) return c;
       if (_temAtividadeRecente(c.deviceId, dets, alts, agora)) {
-        return CameraDevice(
-          id: c.id,
-          deviceId: c.deviceId,
-          status: c.status,
-          ultimoHeartbeat: c.ultimoHeartbeat,
-          online: true,
-        );
+        return _copiarOnline(c, true);
+      }
+      if (temPessoaRecente && DeviceIdUtils.ehCameraPrincipal(c.deviceId)) {
+        return _copiarOnline(c, true);
       }
       return c;
     }).toList();
+  }
+
+  CameraDevice _copiarOnline(CameraDevice c, bool online) {
+    return CameraDevice(
+      id: c.id,
+      deviceId: c.deviceId,
+      status: c.status,
+      ultimoHeartbeat: c.ultimoHeartbeat,
+      online: online,
+    );
   }
 
   bool _temAtividadeRecente(
@@ -154,33 +233,19 @@ class MonitorProvider extends ChangeNotifier {
   ) {
     for (final d in dets) {
       if (!DeviceIdUtils.mesmoDispositivo(d.deviceId, deviceId)) continue;
-      final dt = _parseTs(d.timestamp);
-      if (dt != null &&
-          agora.difference(dt).inMinutes <= AppConfig.cameraAtividadeMinutes) {
+      if (timestampRecente(d.timestamp,
+          minutos: AppConfig.cameraAtividadeMinutes)) {
         return true;
       }
     }
     for (final a in alts) {
       if (!DeviceIdUtils.mesmoDispositivo(a.deviceId, deviceId)) continue;
-      final dt = _parseTs(a.timestamp);
-      if (dt != null &&
-          agora.difference(dt).inMinutes <= AppConfig.cameraAtividadeMinutes) {
+      if (timestampRecente(a.timestamp,
+          minutos: AppConfig.cameraAtividadeMinutes)) {
         return true;
       }
     }
     return false;
-  }
-
-  DateTime? _parseTs(String raw) {
-    try {
-      var s = raw.trim();
-      if (!s.endsWith('Z') && !s.contains('+') && s.contains('T')) {
-        s = '${s}Z';
-      }
-      return DateTime.parse(s).toLocal();
-    } catch (_) {
-      return null;
-    }
   }
 
   CameraDevice? cameraPorId(String deviceId) {
@@ -190,18 +255,31 @@ class MonitorProvider extends ChangeNotifier {
     return null;
   }
 
-  /// Log unificado de alertas e detecções da câmera, mais recentes primeiro.
+  /// Log unificado: alertas, detecções e identificações recentes da câmera.
   List<EventoCamera> logCamera(String deviceId) {
     final eventos = <EventoCamera>[];
+    final chaves = <String>{};
+
+    void add(EventoCamera e) {
+      final chave = '${e.tipo.name}_${e.id}_${e.timestamp}_${e.nome}';
+      if (chaves.add(chave)) eventos.add(e);
+    }
 
     for (final a in alertas) {
       if (DeviceIdUtils.mesmoDispositivo(a.deviceId, deviceId)) {
-        eventos.add(EventoCamera.fromAlerta(enriquecerAlerta(a)));
+        add(EventoCamera.fromAlerta(enriquecerAlerta(a)));
       }
     }
     for (final d in deteccoes) {
       if (DeviceIdUtils.mesmoDispositivo(d.deviceId, deviceId)) {
-        eventos.add(EventoCamera.fromDeteccao(d));
+        add(EventoCamera.fromDeteccao(d));
+      }
+    }
+
+    // Identificações via /pessoas (MQTT ingest) — sem device_id na API
+    if (DeviceIdUtils.ehCameraPrincipal(deviceId)) {
+      for (final p in pessoas) {
+        add(EventoCamera.fromPessoa(p));
       }
     }
 
