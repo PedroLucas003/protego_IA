@@ -1,90 +1,128 @@
 # Protego IA
 
-Sistema de reconhecimento facial em tempo real para bodycam policial. Detecta e identifica alvos cadastrados, aplica anti-spoofing, análise de emoção e prova de vida, e publica alertas via MQTT e HTTP.
+# Protego IA 🔍
+
+Sistema de reconhecimento facial em tempo real para bodycam policial, desenvolvido como projeto integrador na Nova Roma.
+
+## Visão Geral
+
+O Protego IA é um sistema embarcado + IA que captura o stream de vídeo de uma câmera ESP32-CAM, identifica suspeitos cadastrados em banco de dados policial e dispara alertas em tempo real via MQTT com segurança mTLS.
 
 ---
 
 ## Arquitetura
-
-```
 ESP32-CAM (stream MJPEG)
-        ↓
-reconhecimento_final.py
-    ├── Thread Vídeo   → captura frames da câmera
-    ├── Thread IA      → InsightFace ArcFace + DeepFace
-    └── Thread Alerta  → MQTT + HTTP (api_client.py)
-        ↓
-PostgreSQL Railway      ← banco criminal (pessoas, mandados, detecções)
-Backend API             ← recebe detecções em tempo real (em desenvolvimento)
-```
+↓
+Python InsightFace ArcFace (reconhecimento facial)
+↓
+PostgreSQL Railway (banco de alvos)
+↓
+MQTT mTLS EMQX Railway (alertas)
+↓
+FastAPI Railway (API backend)
 
 ---
 
-## Funcionalidades
+## Stack
 
-- Reconhecimento facial com InsightFace ArcFace (embeddings 512-dim)
-- Tolerância de similaridade ajustada por nível de perigo (CRÍTICO → BAIXO)
-- Anti-spoofing via variância Laplacian e saturação HSV
-- Detecção de emoção em tempo real (DeepFace)
-- Prova de vida por detecção de piscar (keypoints faciais)
-- HUD em tempo real com ficha do alvo, barra de confiança e alertas sonoros
-- Publicação de alertas via MQTT (QoS 1)
-- Envio de detecções ao backend via HTTP (assíncrono, não bloqueia o vídeo)
-- Recarregamento automático do banco a cada 5 minutos
-- Captura automática de suspeitos desconhecidos
-
----
-
-## Requisitos
-
-- Python 3.10+
-- ESP32-CAM com firmware de streaming MJPEG
-- PostgreSQL acessível via `DB_URL`
-- Broker MQTT acessível
-
-Instale as dependências:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Configuração
-
-1. Copie o template de variáveis de ambiente:
-
-```bash
-cp .env.example .env
-```
-
-2. Preencha o `.env` com seus valores:
-
-| Variável | Descrição |
+| Componente | Tecnologia |
 |---|---|
-| `ESP32_IP` | IP local do ESP32-CAM |
-| `DB_URL` | Connection string do PostgreSQL |
-| `MQTT_BROKER` | Endereço do broker MQTT |
-| `MQTT_PORT` | Porta do broker (padrão: 1883) |
-| `MQTT_TOPIC_ALERTA` | Tópico para publicar alertas |
-| `API_URL` | URL do backend (quando disponível) |
-| `DEVICE_ID` | Identificador da câmera (ex: `esp32cam-01`) |
+| Hardware | ESP32-CAM AI Thinker |
+| Firmware | Arduino IDE + PlatformIO |
+| IA | Python 3.12 + InsightFace ArcFace buffalo_l |
+| Emoção | DeepFace + TensorFlow |
+| Broker | EMQX Railway (mTLS) |
+| Backend | FastAPI Railway |
+| Banco | PostgreSQL Railway |
+| Protocolo | MQTT + mTLS + WSS |
 
 ---
 
-## Executando
+## Estrutura do Repositório
+protego_IA/
+├── firmware/
+│   ├── bodycam-arduino/     ← Arduino mTLS + stream + OTA
+│   ├── phase3-esp-idf/      ← ESP-IDF + TLS com CA validado
+│   └── phase5-wss-mtls/     ← ESP-IDF + WebSocket Secure + mTLS
+├── ia_cameras/
+│   ├── reconhecimento_final.py   ← Motor principal de reconhecimento
+│   ├── api_client.py             ← Cliente HTTP para o backend
+│   ├── cadastrar_alvo.py         ← Script de cadastro de alvos
+│   ├── testar_banco.py           ← Teste de conexão com banco
+│   └── requirements.txt
+├── index.html               ← GitHub Pages
+└── README.md
+
+---
+
+## Phases MQTT/TLS Concluídas
+
+| Phase | Descrição | Responsável |
+|---|---|---|
+| Phase 1 | EMQX + TLS no Docker | Guilherme |
+| Phase 2 | ESP32 Arduino + TLS básico | Pedro |
+| Phase 3 | ESP-IDF + TLS com CA validado | Pedro |
+| Phase 4 | mTLS — autenticação mútua | Pedro |
+| Phase 5 | MQTT over WebSocket Secure | Pedro |
+| Phase 6 | JITP — provisionamento automático | Guilherme |
+| Phase 7 | ACL no EMQX | Guilherme |
+
+---
+
+## Módulo de IA
+
+### Reconhecimento Facial
+
+- **Modelo:** InsightFace `buffalo_l` com ArcFace ResNet50
+- **Embedding:** 512 dimensões por rosto
+- **Similaridade:** produto escalar (cosseno) normalizado L2
+- **Limiares por nível de perigo:**
+  - CRÍTICO → 70% mínimo
+  - ALTO → 65%
+  - MÉDIO → 60%
+  - BAIXO → 55%
+
+### Diferenciais
+
+- **Anti-spoofing** — detecta foto impressa via Laplacian + saturação HSV
+- **Prova de vida** — detecta piscar de olhos via keypoints faciais
+- **Threading** — display fluido a 30fps enquanto IA processa em background
+- **Recarregamento automático** — banco atualizado a cada 5 minutos
+- **Análise de emoção** — DeepFace com cache de 2 segundos
+
+### MQTT ClientIDs
+
+- ESP32: `esp32_cam_01`
+- Python: `protego_ia_01`
+
+---
+
+## Como Rodar
+
+### Pré-requisitos
+
+- Python 3.12
+- `.env` configurado (ver `.env.example`)
+
+### Instalar dependências
 
 ```bash
+cd ia_cameras
+python -m venv .venv
+.venv\Scripts\activate
+pip install dlib
+pip install tf-keras
+pip install insightface opencv-python deepface tensorflow paho-mqtt psycopg2-binary requests numpy Pillow python-dotenv
+```
+
+### Rodar o sistema
+
+```bash
+cd ia_cameras
 python reconhecimento_final.py
 ```
 
-Pressione `Q` para encerrar.
-
----
-
-## Cadastro de Alvos
-
-Use o script de cadastro CLI para adicionar pessoas ao banco:
+### Cadastrar novo alvo
 
 ```bash
 python cadastrar_alvo.py
@@ -92,47 +130,82 @@ python cadastrar_alvo.py
 
 ---
 
-## Estrutura do Projeto
+## Variáveis de Ambiente
 
-```
-protego-ia/
-├── reconhecimento_final.py   # motor principal
-├── api_client.py             # integração HTTP com o backend
-├── cadastrar_alvo.py         # CLI de cadastro
-├── requirements.txt          # dependências Python
-├── .env.example              # template de variáveis de ambiente
-├── .env                      # variáveis reais (NÃO commitar)
-├── logs/                     # logs do sistema
-├── capturas_alvos/           # fotos de alvos reconhecidos
-├── suspeitos_detectados/     # fotos de desconhecidos
-├── backend_nuvem/            # backend FastAPI (em desenvolvimento)
-└── frontend_app/             # painel web (em desenvolvimento)
+Cria um arquivo `.env` na pasta `ia_cameras/` com:
+
+```env
+ESP32_IP=<ip_da_camera>
+DB_URL=postgresql://user:password@host:port/database?sslmode=require
+MQTT_BROKER=<broker_host>
+MQTT_PORT=38909
+MQTT_TOPIC_ALERTA=reconhecimento/facial
+API_URL=https://protegoia-production.up.railway.app
+DEVICE_ID=camera_01
 ```
 
 ---
 
-## Níveis de Perigo
+## Banco de Dados
 
-| Nível | Tolerância de Similaridade | Comportamento |
+```sql
+CREATE TABLE pessoas (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255),
+    cpf VARCHAR(14),
+    rg VARCHAR(20),
+    nivel_perigo VARCHAR(20),
+    status VARCHAR(20),
+    observacoes TEXT,
+    encoding JSONB,
+    timestamp TIMESTAMP
+);
+
+CREATE TABLE mandados (
+    id SERIAL PRIMARY KEY,
+    pessoa_id INTEGER REFERENCES pessoas(id),
+    tipo VARCHAR(100),
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE historico_criminal (
+    id SERIAL PRIMARY KEY,
+    pessoa_id INTEGER REFERENCES pessoas(id),
+    tipo_crime VARCHAR(100),
+    artigo_lei VARCHAR(50)
+);
+
+CREATE TABLE deteccoes (
+    id SERIAL PRIMARY KEY,
+    device_id VARCHAR(50),
+    timestamp TIMESTAMP,
+    nome VARCHAR(255),
+    similaridade FLOAT,
+    nivel_perigo VARCHAR(20),
+    emocao VARCHAR(50),
+    anti_spoofing BOOLEAN,
+    prova_de_vida BOOLEAN,
+    frame_b64 TEXT
+);
+```
+
+---
+
+## Endpoints FastAPI
+
+| Método | Endpoint | Descrição |
 |---|---|---|
-| CRÍTICO | 0.30 | Alerta sonoro triplo + MQTT + API |
-| ALTO | 0.35 | Alerta sonoro duplo + MQTT + API |
-| MÉDIO | 0.40 | Alerta sonoro simples + MQTT + API |
-| BAIXO | 0.45 | Registro silencioso + MQTT + API |
+| POST | `/heartbeat` | Status da câmera online |
+| POST | `/deteccoes` | Registra detecção facial |
+| POST | `/alertas` | Dispara alerta de alvo |
+
+Backend: `https://protegoia-production.up.railway.app`
 
 ---
 
-## Roadmap
+## Equipe
 
-- [x] Reconhecimento facial (InsightFace ArcFace)
-- [x] Anti-spoofing
-- [x] Detecção de emoção (DeepFace)
-- [x] Prova de vida
-- [x] Banco PostgreSQL + MQTT
-- [x] Integração HTTP com backend
-- [ ] Firmware ESP32 com TLS (Phase 2)
-- [ ] Firmware ESP32 com ESP-IDF (Phase 3)
-- [ ] mTLS no ESP32 (Phase 4)
-- [ ] WebSocket seguro no firmware (Phase 5)
-- [ ] Backend FastAPI
-- [ ] Painel web de alertas
+- **Pedro Lucas** — IA + Firmware ESP32
+- **Guilherme Viana** — Cloud + EMQX + FastAPI + PostgreSQL
+
+---
